@@ -8,45 +8,23 @@ from keras.layers import Dense, Dropout, Activation
 from keras.layers import Embedding
 from keras.layers import LSTM
 from keras.layers import Conv1D, MaxPooling1D
+from helpers import *
 from keras.datasets import imdb
 import numpy as np
 import re
 from random import randint
 
-def clean_sentences(string):
-    string = string.lower().replace("<br />", " ")
-    return re.sub(strip_special_chars, "", string.lower())
 
+def create_word_list(documents):
 
-# def get_train_batch():
-#     labels = []
-#     arr = np.zeros([batch_size, max_seq_length])
-#     for i in range(batch_size):
-#         if (i % 2 == 0):
-#             # num = randint(1, len(positive_files))
-#             # Leaving 750*2 samples for testing
-#             num = randint(1, len(positive_files) - 750)
-#             labels.append([1, 0])
-#         else:
-#             # num = randint(len(positive_files)+1, len(positive_files)+len(negative_files))
-#             # Leaving 750*2 samples for testing
-#             num = randint(len(positive_files)+750, len(positive_files)+len(negative_files))
-#             labels.append([0, 1])
-#         arr[i] = ids[num-1:num]
-#     return arr, labels
-#
-#
-# def get_test_batch():
-#     labels = []
-#     arr = np.zeros([batch_size, max_seq_length])
-#     for i in range(batch_size):
-#         num = randint(len(positive_files) - 750, len(positive_files) + 750)
-#         if num <= len(positive_files):
-#             labels.append([1, 0])
-#         else:
-#             labels.append([0, 1])
-#         arr[i] = ids[num-1:num]
-#     return arr, labels
+    word_set = set()
+
+    for document in documents:
+        word_set.update(clean_sentences(document).split())
+
+    # TODO: comment
+    np.save('words_list_tweets.npy', list(word_set))
+    return list(word_set)
 
 
 def split_data(x, ratio, seed=1):
@@ -69,8 +47,7 @@ def split_data(x, ratio, seed=1):
     y_te = y[index_te]
     return x_tr, x_te, y_tr, y_te
 
-# Removes punctuation, parentheses, question marks, etc., and leaves only alphanumeric characters
-strip_special_chars = re.compile("[^A-Za-z0-9 ]+")
+
 
 
 
@@ -122,6 +99,9 @@ print('The total number of files is', num_files_total)
 print('The total number of words in the files is', sum(numWords))
 print('The average number of words in the files is', sum(numWords)/len(numWords))
 
+max_seq_length = int(sum(numWords)/len(numWords)) + 5
+
+
 # plt.hist(numWords, 50)
 # plt.xlabel('Sequence Length')
 # plt.ylabel('Frequency')
@@ -129,19 +109,25 @@ print('The average number of words in the files is', sum(numWords)/len(numWords)
 # plt.show()
 
 
-
-wordsList = np.load('wordsList.npy')
-print('Loaded the word list!')
-wordsList = wordsList.tolist()  # Originally loaded as numpy array
-wordsList = [word.decode('UTF-8') for word in wordsList]  # Encode words as UTF-8
-wordVectors = np.load('wordVectors.npy')
-print('Loaded the word vectors!')
+# wordsList = np.load('wordsList.npy')
+# print('Loaded the word list!')
+# wordsList = wordsList.tolist()  # Originally loaded as numpy array
+# wordsList = [word.decode('UTF-8') for word in wordsList]  # Encode words as UTF-8
+# wordVectors = np.load('wordVectors.npy')
+# print('Loaded the word vectors!')
 
 positive_files = positive_files_total
 negative_files = negative_files_total
 num_files_mini = len(positive_files) + len(negative_files)
 
-ids = np.load('ids_final.npy')
+# words_list = create_word_list(positive_files + negative_files)
+wordsList = np.load('words_list_tweets.npy')
+wordsList = wordsList.tolist()  # Originally loaded as numpy array
+print(len(wordsList))
+
+ids = create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
+
+ids = np.load('ids_from_tweets.npy')
 
 x_train, x_test, y_train, y_test = split_data(ids, 0.8)
 
@@ -150,9 +136,9 @@ print('Build model...')
 # Embedding
 # number of words in the word vectors
 max_features = 400000
-max_seq_length = int(sum(numWords)/len(numWords)) + 5
-# embedding_size = 128  # first time
-embedding_size = 50
+embedding_size = 64  # first time
+# embedding_size = 128
+# embedding_size = 50
 
 # Convolution
 kernel_size = 5
@@ -168,8 +154,8 @@ epochs = 2
 
 model = Sequential()
 # First layer, embedding
-# model.add(Embedding(max_features, embedding_size, input_length=max_seq_length))  # w\o wordVectors - old one
-model.add(Embedding(max_features, embedding_size, weights=[wordVectors], input_length=max_seq_length))
+model.add(Embedding(max_features, embedding_size, input_length=max_seq_length))  # w\o wordVectors - old one
+# model.add(Embedding(max_features, embedding_size, weights=[wordVectors], input_length=max_seq_length))
 # TODO: To try
 # model.add(Embedding(max_features, embedding_size, weights=[wordVectors], input_length=max_seq_length, trainable=False))
 # Prevent overfitting
@@ -218,8 +204,8 @@ print('Test accuracy:', acc)
 
 # serialize model to JSON
 model_json = model.to_json()
-with open("first_model.json", "w") as json_file:
+with open("crnn3_model.json", "w") as json_file:
     json_file.write(model_json)
 # serialize weights to HDF5
-model.save_weights("weights_CRNN.h5")
+model.save_weights("crnn3_weights.h5")
 print("Saved model to disk")

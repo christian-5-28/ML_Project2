@@ -1,5 +1,64 @@
 import pandas as pd
 import numpy as np
+import re
+import datetime
+
+
+def clean_sentences(string):
+    # Removes punctuation, parentheses, question marks, etc., and leaves only alphanumeric characters
+    strip_special_chars = re.compile("[^A-Za-z0-9 ]+")
+    string = string.lower().replace("<br />", " ")
+    return re.sub(strip_special_chars, "", string.lower())
+
+
+def create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList):
+
+    ids = np.zeros((len(positive_files) + len(negative_files), max_seq_length), dtype='int32')
+    file_counter = 0
+    start_time = datetime.datetime.now()
+    for line in positive_files:
+        index_counter = 0
+        cleaned_line = clean_sentences(line)  # Cleaning the sentence
+        split = cleaned_line.split()
+
+        for word in split:
+            try:
+                ids[file_counter][index_counter] = wordsList.index(word)
+            except ValueError:
+                ids[file_counter][index_counter] = len(wordsList)  # Vector for unkown words
+            index_counter = index_counter + 1
+
+            # If we have already seen maxSeqLength words, we break the loop of the words of a tweet
+            if index_counter >= max_seq_length:
+                break
+
+        if file_counter % 10000 == 0:
+            print("Steps to end: " + str(len(positive_files) + len(negative_files) - file_counter))
+            print('Time of execution: ', datetime.datetime.now() - start_time)
+
+        file_counter = file_counter + 1
+
+    for line in negative_files:
+        index_counter = 0
+        cleaned_line = clean_sentences(line)
+        split = cleaned_line.split()
+
+        for word in split:
+            try:
+                ids[file_counter][index_counter] = wordsList.index(word)
+            except ValueError:
+                ids[file_counter][index_counter] = len(wordsList)  # Vector for unkown words
+            index_counter = index_counter + 1
+
+            if index_counter >= max_seq_length:
+                break
+
+        if file_counter % 10000 == 0:
+            print("Steps to end: " + str(len(positive_files) + len(negative_files) - file_counter))
+            print('Time of execution: ', datetime.datetime.now() - start_time)
+        file_counter = file_counter + 1
+
+    np.save('ids_from_tweets.npy', ids)
 
 
 def make_submission(pred, filename, from_tf=False):

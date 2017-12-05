@@ -2,8 +2,8 @@ from keras.models import model_from_json
 import numpy as np
 from helpers import *
 
-model_path = 'keras_files/first_model.json'
-weights_path = "keras_files/weights_CRNN.h5"
+model_path = 'keras_files/crnn2_model.json'
+weights_path = "keras_files/crnn2_weights.h5"
 
 # load json and create model
 json_file = open(model_path, 'r')
@@ -21,8 +21,8 @@ ids_test = np.load('ids_test.npy')
 
 prediction = loaded_model.predict(ids_test, verbose=0)
 
-prediction[prediction > 0.5] = 1
+prediction[prediction >= 0.5] = 1
 prediction[prediction < 0.5] = -1
 prediction = prediction.reshape(-1)
 print(prediction)
-make_submission(prediction, 'Crnn_1')
+make_submission(prediction, 'Crnn_2')

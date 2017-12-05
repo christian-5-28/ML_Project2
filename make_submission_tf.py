@@ -65,8 +65,6 @@ with open(path_test, "r") as f:
 ids_test = np.load('ids_test.npy')
 
 
-
-
 batch_size = 50
 lstm_units = 64
 num_classes = 2
