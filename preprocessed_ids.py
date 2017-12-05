@@ -6,7 +6,15 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 def tokenize(s):
+    # Heart symbol
+    emoticons_str = r"""
+        (?:
+            [<] # heart top
+            [3] # heart bottom
+        )"""
+
     regex_str = [
+        emoticons_str,
         r'<[^>]+>',  # HTML tags
         r'(?:@[\w_]+)',  # @-mentions
         r"(?:\#+[\w_]+[\w\'_\-]*[\w_]+)",  # hash-tags
@@ -21,7 +29,7 @@ def tokenize(s):
     return tokens_re.findall(s)
 
 def clean_sentences(string):
-    # Lowercases whole sentence, and then replaces the s
+    # Lowercases whole sentence, and then replaces the following
     string = string.lower().replace("<br />", " ")
     string = string.replace("n't", " not")
     string = string.replace("'m", " am")
@@ -32,19 +40,25 @@ def clean_sentences(string):
     string = string.replace("'s", " is")
     string = string.replace("#", "<hashtag> ")
     string = string.replace("lol", "laugh")
+
     # Tokenizes string:
     string = tokenize(string)
-    # Replaces numbers with the word vector keyword <number>
+
+    # Replaces <3 symbols
+    string = [w.replace("<3", "love") for w in string]
+
+    # Replaces numbers with the keyword <number>
     string = [re.sub(r'\d+[.]?[\d*]?$', '<number>', w) for w in string]
+
     # Won't = will not, shan't = shall not
     string = [w.replace("wo", "will") for w in string]
     string = [w.replace("sha", "shall") for w in string]
 
     # Any token which expresses laughter is replaced with "laugh"
     for i, word in enumerate(string):
-        if re.match(r'^haha', word) or re.match(r'^ahaha', word) or re.match(r'^aaahaha', word) or \
-                    re.match(r'^haaha', word) or re.match(r'^bwahaha', word):
+        if "haha" in word or re.match(r'^haha', word) or re.match(r'^ahaha', word):
             string[i] = word.replace(word, "laugh")
+
     return string
 
 path_positive = "twitter-datasets/train_pos_full.txt"
@@ -101,8 +115,9 @@ f.close()
 positive_files = positive_files_total
 negative_files = negative_files_total
 num_files_mini = len(positive_files) + len(negative_files)
+
 '''
-Now, let's convert to an ids matrix
+Convert to an ids matrix
 '''
 ids = np.zeros((num_files_mini, max_seq_length), dtype='int32')
 file_counter = 0
@@ -115,7 +130,6 @@ for line in positive_files:
             ids[file_counter][index_counter] = word_list.index(word)
         except ValueError:
             ids[file_counter][index_counter] = 18  # Vector for unknown words
-            print(word)
         index_counter = index_counter + 1
 
         # If we have already seen maxSeqLength words, we break the loop of the words of a tweet
@@ -135,7 +149,6 @@ for line in negative_files:
             ids[file_counter][index_counter] = word_list.index(word)
         except ValueError:
             ids[file_counter][index_counter] = 19  # Vector for unknown words
-            print(word)
         index_counter = index_counter + 1
 
         if index_counter >= max_seq_length:
