@@ -14,6 +14,8 @@ import numpy as np
 import re
 from random import randint
 
+from ML_Project2.helpers import create_ids_matrix, clean_sentences
+
 
 def create_word_list(documents):
 
@@ -74,8 +76,8 @@ Only 2 epochs are needed as the dataset is very small.
 # # print('x_train shape:', x_train.shape)
 # print('x_test shape:', x_test.shape)
 
-path_positive = "twitter-datasets/train_pos_full.txt"
-path_negative = "twitter-datasets/train_neg_full.txt"
+path_positive = "data/twitter-datasets/train_pos_full.txt"
+path_negative = "data/twitter-datasets/train_neg_full.txt"
 
 numWords = []
 positive_files_total = []
@@ -120,10 +122,10 @@ positive_files = positive_files_total
 negative_files = negative_files_total
 num_files_mini = len(positive_files) + len(negative_files)
 
-# words_list = create_word_list(positive_files + negative_files)
+words_list = create_word_list(positive_files + negative_files)
 wordsList = np.load('words_list_tweets.npy')
 wordsList = wordsList.tolist()  # Originally loaded as numpy array
-print(len(wordsList))
+print(wordsList[:100])
 
 ids = create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
 
