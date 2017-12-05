@@ -218,8 +218,8 @@ print('Test accuracy:', acc)
 
 # serialize model to JSON
 model_json = model.to_json()
-with open("first_model.json", "w") as json_file:
+with open("crnn1_model.json", "w") as json_file:
     json_file.write(model_json)
 # serialize weights to HDF5
-model.save_weights("weights_CRNN.h5")
+model.save_weights("crnn1_weights.h5")
 print("Saved model to disk")

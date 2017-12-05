@@ -1,4 +1,4 @@
-1)
+1) Crnn1
 # Embedding
 max_features = 400000
 max_seq_length = int(sum(numWords)/len(numWords)) + 5
@@ -20,13 +20,13 @@ model.add(Embedding(max_features, embedding_size, weights=[wordVectors], input_l
 
 Dropout before Conv layer and LSTM layer
 
-prevision: 83.3%
+testing: 83.3%
 
 score on kaggle: 83.14%
 
 ########################################################################################################################
 
-2) TODO
+2) Crnn2
 
 # Embedding
 max_features = 400000
@@ -45,13 +45,12 @@ lstm_output_size = 64
 batch_size = 50
 epochs = 2
 
-TODO
 model.add(Embedding(max_features, embedding_size, input_length=max_seq_length))  # w\o wordVectors
 
-Dropout before Conv layer
+Dropout before Conv layer and LSTM layer
 
-prevision:
+testing: 0.844
 
-score on kaggle:
+score on kaggle: 0.83280
 
 ########################################################################################################################
