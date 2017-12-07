@@ -1,9 +1,9 @@
-from ML_Project2.helpers import *
+from helpers import *
 
 ##################SCRIPT##################
 
-path_positive = "data/twitter-datasets/train_pos_full.txt"
-path_negative = "data/twitter-datasets/train_neg_full.txt"
+path_positive = "twitter-datasets/train_pos_full.txt"
+path_negative = "twitter-datasets/train_neg_full.txt"
 
 numWords = []
 positive_files_total = []
@@ -45,8 +45,8 @@ print('Build model...')
 # embedding parameters
 max_features = 400000
 max_seq_length = int(sum(numWords) / len(numWords)) + 5
-# embedding_size = 64  # first time
-embedding_size = 128  # first time
+embedding_size = 64  # first time
+# embedding_size = 128
 # embedding_size = 50
 num_classes = 2
 
@@ -104,9 +104,9 @@ print('Test accuracy:', acc)
 
 # serialize model to JSON
 model_json = model.to_json()
-with open("crnn2_model.json", "w") as json_file:
+with open("deepCnn_model.json", "w") as json_file:
     json_file.write(model_json)
 # serialize weights to HDF5
-model.save_weights("crnn2_weights.h5")
+model.save_weights("deepCnn_weights.h5")
 print("Saved model to disk")
 
