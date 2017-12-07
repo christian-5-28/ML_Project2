@@ -26,6 +26,31 @@ def create_word_list(documents):
     return list(word_set)
 
 
+def create_word_list2(documents):
+
+    word_dict = {}
+    for document in documents:
+        # TODO: Eigil, change to your clean_sentences()
+        split = clean_sentences(document).split()
+        for word in split:
+            if word not in word_dict:
+                word_dict[word] = 1
+            else:
+                word_dict[word] += 1
+
+    # TODO: here to the skipgrams
+
+    # TODO: add to a list (set) every word in the dict with value >= 15
+    word_set = set()
+    for key, value in word_dict.items():
+        if value >= 15:
+            word_set.add(str.encode(word))
+
+    np.save('words_list_tweets.npy', list(word_set))
+    return list(word_set)
+
+
+
 
 def clean_sentences(string):
     # Removes punctuation, parentheses, question marks, etc., and leaves only alphanumeric characters
