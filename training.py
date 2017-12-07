@@ -110,6 +110,7 @@ wordsList = wordsList.tolist()  # Originally loaded as numpy array
 wordsList = [word.decode('UTF-8') for word in wordsList]  # Encode words as UTF-8
 wordVectors = np.load('wordVectors.npy')
 print('Loaded the word vectors!')
+print(wordsList[:10])
 
 positive_files = positive_files_total
 negative_files = negative_files_total

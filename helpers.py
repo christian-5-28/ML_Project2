@@ -2,6 +2,29 @@ import pandas as pd
 import numpy as np
 import re
 import datetime
+import numpy as np
+import re
+from random import randint
+import tensorflow as tf
+import keras
+from keras import Model, Input, Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Embedding, Dropout, Conv1D, MaxPooling1D, Activation, \
+    LSTM, BatchNormalization, Merge
+from keras.utils import plot_model
+
+
+def create_word_list(documents):
+
+    word_set = set()
+
+    for document in documents:
+        split = clean_sentences(document).split()
+        for word in split:
+            word_set.add(str.encode(word))
+
+    np.save('words_list_tweets.npy', list(word_set))
+    return list(word_set)
+
 
 
 def clean_sentences(string):
@@ -153,15 +176,6 @@ def load_lexicons():
     emotions.reset_index(inplace=True)
 
     return emotions
-import numpy as np
-import re
-from random import randint
-import tensorflow as tf
-import keras
-from keras import Model, Input, Sequential
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Embedding, Dropout, Conv1D, MaxPooling1D, Activation, \
-    LSTM, BatchNormalization, Merge
-from keras.utils import plot_model
 
 
 def split_data(x, ratio, seed=1):

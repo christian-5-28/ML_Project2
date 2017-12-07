@@ -29,6 +29,7 @@ def tokenize(s):
     tokens_re = re.compile(r'(' + '|'.join(regex_str) + ')', re.VERBOSE | re.IGNORECASE)
     return tokens_re.findall(s)
 
+
 def clean_sentences(string):
     # Lowercases whole sentence, and then replaces the following
     string = string.lower().replace("<br />", " ")
@@ -91,7 +92,7 @@ print('The average number of words in the files is', sum(numWords)/len(numWords)
 max_seq_length = 20
 
 '''loading and creating word vectors and dictionary'''
-glove_model_path = '/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/glove/glove.twitter.27B.25d.txt'
+glove_model_path = 'for_eigil/glove/glove.twitter.27B.25d.txt'
 
 f = open(glove_model_path, 'r')
 
