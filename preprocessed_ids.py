@@ -129,7 +129,7 @@ for line in positive_files:
 
     for word in split:
         try:
-            ids[file_counter][index_counter] = word_list.index(word)
+            ids[file_counter][index_counter] = word_list.index(word) + 1
         except ValueError:
             ids[file_counter][index_counter] = 18  # Vector for unknown positive vectors, not used otherwise
         index_counter = index_counter + 1
@@ -148,7 +148,7 @@ for line in negative_files:
 
     for word in split:
         try:
-            ids[file_counter][index_counter] = word_list.index(word)
+            ids[file_counter][index_counter] = word_list.index(word) + 1
         except ValueError:
             ids[file_counter][index_counter] = 19  # Vector for unknown negative vectors, not used otherwise
         index_counter = index_counter + 1
