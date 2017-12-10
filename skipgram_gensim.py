@@ -8,6 +8,29 @@ from keras import layers, preprocessing
 from keras import models as mods
 import random
 
+def tokenize(s):
+    # Heart symbol
+    emoticons_str = r"""
+        (?:
+            [<] # heart top
+            [3] # heart bottom
+        )"""
+
+    regex_str = [
+        emoticons_str,
+        r'<[^>]+>',  # HTML tags
+        r'(?:@[\w_]+)',  # @-mentions
+        r"(?:\#+[\w_]+[\w\'_\-]*[\w_]+)",  # hash-tags
+        r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+',  # URLs
+
+        r'(?:(?:\d+,?)+(?:\.?\d+)?)',  # numbers
+        r"(?:[a-z][a-z'\-_]+[a-z])",  # words with - and '
+        r'(?:[\w_]+)',  # other words
+        r'(?:\S)'  # anything else
+    ]
+    tokens_re = re.compile(r'(' + '|'.join(regex_str) + ')', re.VERBOSE | re.IGNORECASE)
+    return tokens_re.findall(s)
+
 
 def clean_sentences(string):
     # Lowercases whole sentence, and then replaces the following
@@ -23,7 +46,9 @@ def clean_sentences(string):
     string = string.replace("lol", "laugh")
 
     # Tokenizes string:
-    string = string.split()
+    # string = string.split()
+    string = tokenize(string)
+
 
     # Replaces <3 symbols
     string = [w.replace("<3", "love") for w in string]
@@ -94,13 +119,13 @@ def get_sim(valid_word_idx, vocab_size):
     return sim
 
 
-class MyCorpus(object):
-    def __iter__(self):
-        for line in open(path_positive, encoding="utf-8"):
-            # assume there's one document per line, tokens separated by whitespace
-            line = clean_sentences(line)
-            yield line
-
+# class MyCorpus(object):
+#     def __iter__(self):
+#         for line in open(path_positive, encoding="utf-8"):
+#             # assume there's one document per line, tokens separated by whitespace
+#             line = clean_sentences(line)
+#             yield line
+#
 
 '''Iterator object that iterates through files in directory, picking every sentence from the file.
 This is why "combined_full.txt" should be placed in its own directory.'''
@@ -120,9 +145,10 @@ class MySentences(object):
 # and
 # TODO: https://rare-technologies.com/word2vec-tutorial/
 
-path_positive = "twitter-datasets/train_pos.txt"
-path_negative = "twitter-datasets/train_neg.txt"
-# path_combined = "twitter-datasets/combined_full.txt"
+# TODO: try simple tokenization, introduce phrases, figure out subsampling.
+
+# path_positive = "twitter-datasets/train_pos.txt"
+# path_negative = "twitter-datasets/train_neg.txt"
 
 '''Loading senctences in a memory-friendly way, needs full path'''
 sentences = MySentences("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/combined_tweets")  # a memory-friendly iterator
@@ -151,6 +177,7 @@ vocab_size = len(model.wv.vocab)
 print(model.wv.index2word[vocab_size - 1], model.wv.index2word[vocab_size - 2], model.wv.index2word[vocab_size - 3])
 
 '''Extracting vocabulary and the indexes'''
+path_combined = "combined_tweets/combined_full.txt"
 # convert the input data into a list of integer indexes aligning with the wv indexes
 str_data = read_data(path_combined)
 index_data = convert_data_to_index(str_data, model.wv)
@@ -189,7 +216,7 @@ valid_word = layers.Input((1,), dtype='int32')
 other_word = layers.Input((1,), dtype='int32')
 # setup the embedding layer
 embeddings = layers.Embedding(input_dim=embedding_matrix.shape[0], output_dim=embedding_matrix.shape[1],
-                      weights=[embedding_matrix])
+                              weights=[embedding_matrix])
 embedded_a = embeddings(valid_word)
 embedded_b = embeddings(other_word)
 similarity = layers.merge([embedded_a, embedded_b], mode='cos', dot_axes=2)
