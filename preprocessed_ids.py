@@ -54,6 +54,7 @@ def clean_sentences(string):
 
     # Won't = will not, shan't = shall not
     string = [w.replace("wo", "will") for w in string]
+    string = [w.replace("ca", "can") for w in string]
     string = [w.replace("sha", "shall") for w in string]
 
     # Any token which expresses laughter is replaced with "laugh"

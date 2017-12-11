@@ -58,6 +58,7 @@ def clean_sentences(string):
 
     # Won't = will not, shan't = shall not
     string = [w.replace("wo", "will") for w in string]
+    string = [w.replace("ca", "can") for w in string]
     string = [w.replace("sha", "shall") for w in string]
 
     # Any token which expresses laughter is replaced with "laugh"
@@ -67,7 +68,7 @@ def clean_sentences(string):
 
     return string
 
-def comine_pos_neg():
+def combine_pos_neg():
     '''Combines the postive and negative files, maybe not needed in final version'''
     filenames = ['twitter-datasets/train_pos_full.txt', 'twitter-datasets/train_neg_full.txt']
     filenames2 = ['twitter-datasets/train_pos.txt', 'twitter-datasets/train_neg.txt']
@@ -145,7 +146,7 @@ class MySentences(object):
 # and
 # TODO: https://rare-technologies.com/word2vec-tutorial/
 
-# TODO: try simple tokenization, introduce phrases, figure out subsampling.
+# TODO: try simple tokenization (+strip special chars), introduce phrases, figure out subsampling, add del to clear mem.
 
 # path_positive = "twitter-datasets/train_pos.txt"
 # path_negative = "twitter-datasets/train_neg.txt"
@@ -254,3 +255,20 @@ for i in range(valid_size):
 # Nearest to good: goood, great, refreshing, mutual, nicee, tiring, lush, fab,
 # Nearest to that: proves, kinky, mhmm, opinions, truely, nick, jealousy, prank,
 # Nearest to no: solver, e-books, taught, matter, guarantee, lies, drastic, willrries,
+
+# Nearest to -: <number>, t40p, x201s, e-servers, a22m, superserver, x201i, plt,
+# Nearest to laugh: lmao, hehe, lool, lmfao, loool, hah, aha, hehehe,
+# Nearest to rt: evuls, herh, <user>, sheyi, lwkm, gerrout, yimu, pukpuk,
+# Nearest to i: meeep, but, augh, aargh, reaaalllyyy, aaarrrggghhh, fackkk, weeell,
+# Nearest to if: when, whether, guarentee, nooope, becouse, did't, implying, wether,
+# Nearest to know: kno, knooow, knw, knowww, knoww, knoe, idk, knoow,
+# Nearest to me: meee, mee, meh, sombody, caggie, hiim, him, did't,
+# Nearest to x: xx, xxx, 28.<number>, tempzone, digistor, anti-fatigue, xox, dalite,
+# Nearest to the: da, fourteenth, megaset, revolutions, caspian, foc, equus, rediscovered,
+# Nearest to he: she, hes, his, him, nole, yeno, moonwalk, it,
+# Nearest to just: jus, juss, jut, juat, jst, juuust, ijust, juust,
+# Nearest to ca: cant, cannot, cnt, carnt, could, canttt, did, couldnt,
+# Nearest to one: onee, nml, ones, busiest, twill, exceptions, no-one, bookmarked,
+# Nearest to go: goto, went, qo, going, studyyy, playyy, come, goin,
+# Nearest to ,: kalyra, hy-gear, and, mils, te-co, sesmark, ., bigelow,
+# Nearest to <user>: rt, jeeze, !, herh, oook, laugh, evuls, awwn,
