@@ -5,6 +5,7 @@ from nltk.tokenize import word_tokenize
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
+#Preprocessing all tweets and creating ids, took 25h....
 def tokenize(s):
     # Heart symbol
     emoticons_str = r"""
@@ -53,6 +54,7 @@ def clean_sentences(string):
 
     # Won't = will not, shan't = shall not
     string = [w.replace("wo", "will") for w in string]
+    string = [w.replace("ca", "can") for w in string]
     string = [w.replace("sha", "shall") for w in string]
 
     # Any token which expresses laughter is replaced with "laugh"
@@ -128,9 +130,9 @@ for line in positive_files:
 
     for word in split:
         try:
-            ids[file_counter][index_counter] = word_list.index(word)
+            ids[file_counter][index_counter] = word_list.index(word) + 1
         except ValueError:
-            ids[file_counter][index_counter] = 18  # Vector for unknown words
+            ids[file_counter][index_counter] = 18  # Vector for unknown positive vectors, not used otherwise
         index_counter = index_counter + 1
 
         # If we have already seen maxSeqLength words, we break the loop of the words of a tweet
@@ -147,9 +149,9 @@ for line in negative_files:
 
     for word in split:
         try:
-            ids[file_counter][index_counter] = word_list.index(word)
+            ids[file_counter][index_counter] = word_list.index(word) + 1
         except ValueError:
-            ids[file_counter][index_counter] = 19  # Vector for unknown words
+            ids[file_counter][index_counter] = 19  # Vector for unknown negative vectors, not used otherwise
         index_counter = index_counter + 1
 
         if index_counter >= max_seq_length:
