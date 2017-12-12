@@ -44,7 +44,7 @@ def create_word_list2(documents):
     word_set = set()
     for key, value in word_dict.items():
         if value >= 15:
-            word_set.add(str.encode(word))
+            word_set.add(str.encode(key))
 
     np.save('words_list_tweets.npy', list(word_set))
     return list(word_set)
