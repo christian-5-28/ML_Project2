@@ -7,7 +7,7 @@ import re
 from random import randint
 import tensorflow as tf
 import keras
-from keras import Model, Input, Sequential
+from keras.models import Model, Input, Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Embedding, Dropout, Conv1D, MaxPooling1D, Activation, \
     LSTM, BatchNormalization, Merge
 from keras.utils import plot_model
@@ -50,7 +50,9 @@ def create_word_list2(documents):
         if value >= 15:
             word_set.add(str.encode(key))
 
-    np.save('words_list_tweets_15.npy', list(word_set))
+
+
+    np.save('words_list_tweets_final.npy', list(word_set))
     return list(word_set)
 
 
@@ -313,9 +315,10 @@ def clean_sentences_eigil(string):
     string = string.replace("#", "<hashtag> ")
     string = string.replace("lol", "laugh")
     string = string.replace("<3", "love")
+    string = string.replace("<user>", "")
+    string = string.replace("<url>", "")
 
     strip_special_chars = re.compile("[^A-Za-z0-9 ]+")
-    re.sub(strip_special_chars, "", string.lower())
 
     # Tokenizes string:
     string = string.split()
@@ -335,7 +338,7 @@ def clean_sentences_eigil(string):
     #     if "haha" in word:
     #         string[i] = word.replace(word, "laugh")
 
-    return string
+    return re.sub(strip_special_chars, "", string.lower())
 
 
 
