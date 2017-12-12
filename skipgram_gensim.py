@@ -198,24 +198,14 @@ for i in range(len(model.wv.vocab)):
     if embedding_vector is not None:
         embedding_matrix[i] = embedding_vector  # add comma?
 
-thefile = open('vocab.txt', 'w')
-for item in str_data:
-    thefile.write("%s\n" % item)
 
-thefile1 = open('vocab_indeces.txt', 'w')
-for item in index_data:
-    thefile1.write("%s\n" % item)
+# Takes every word in word list and finds the corresponding word vector.
+wordvec = []
+word_list = np.load('words_list_15.npy')
+for word in word_list:
+    wordvec.append(model.wv[word])  # vectors (add comma?)
 
-np.savetxt('wordvecs.txt', embedding_matrix)
-
-# If unable to retrieve dicitonary directly from gensim:
-# wordvec = list()
-# final_dict = {}
-# for word in dictionary:
-#     wordvec.extend(model.wv[word])  # saves vectors (add comma?)
-#     final_dict[word].key += 1  # saves word and index
-
-
+np.savetxt('wordvecs.txt', wordvec)
 
 '''Validation of the similiar words with Keras (for qualitative analysis)'''
 valid_size = 16  # Random set of words to evaluate similarity on.
