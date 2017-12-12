@@ -16,11 +16,15 @@ from keras.utils import plot_model
 def create_word_list(documents):
 
     word_set = set()
-
+    i = 0
     for document in documents:
+        if i % 10000 == 0:
+            print('Step to the end: ', len(documents) - i)
         split = clean_sentences(document).split()
         for word in split:
             word_set.add(str.encode(word))
+
+        i += 1
 
     np.save('words_list_tweets.npy', list(word_set))
     return list(word_set)
@@ -29,27 +33,27 @@ def create_word_list(documents):
 def create_word_list2(documents):
 
     word_dict = {}
+    i = 0
     for document in documents:
-        # TODO: Eigil, change to your clean_sentences()
-        split = clean_sentences(document).split()
+        if i % 10000 == 0:
+            print('Step to the end: ', len(documents) - i)
+        split = clean_sentences_eigil(document)
         for word in split:
             if word not in word_dict:
                 word_dict[word] = 1
             else:
                 word_dict[word] += 1
+        i += 1
 
-    # TODO: here to the skipgrams
-
-    # TODO: add to a list (set) every word in the dict with value >= 15
     word_set = set()
     for key, value in word_dict.items():
         if value >= 15:
             word_set.add(str.encode(key))
 
-    np.save('words_list_tweets.npy', list(word_set))
+
+
+    np.save('words_list_tweets_15.npy', list(word_set))
     return list(word_set)
-
-
 
 
 def clean_sentences(string):
@@ -73,7 +77,7 @@ def create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
             try:
                 ids[file_counter][index_counter] = wordsList.index(word)
             except ValueError:
-                ids[file_counter][index_counter] = len(wordsList)  # Vector for unkown words
+                ids[file_counter][index_counter] = len(wordsList)  # Vector for unknown words
             index_counter = index_counter + 1
 
             # If we have already seen maxSeqLength words, we break the loop of the words of a tweet
@@ -298,7 +302,7 @@ def add_conv_block_filter_sizes(num_filters, max_sentence_length, filter_shapes,
 
     return model
 
-def clean_sentences(string):
+def clean_sentences_eigil(string):
     # Lowercases whole sentence, and then replaces the following
     string = string.lower().replace("<br />", " ")
     string = string.replace("n't", " not")
@@ -329,9 +333,9 @@ def clean_sentences(string):
     string = [w.replace("sha", "shall") for w in string]
 
     # Any token which expresses laughter is replaced with "laugh"
-    for i, word in enumerate(string):
-        if "haha" in word:
-            string[i] = word.replace(word, "laugh")
+    # for i, word in enumerate(string):
+    #     if "haha" in word:
+    #         string[i] = word.replace(word, "laugh")
 
     return string
 

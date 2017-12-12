@@ -248,7 +248,7 @@ for i in range(valid_size):
 
 
 
-    # Nearest to u: shorty, yu, urs, shld, you, bak, ye, mayb,
+# Nearest to u: shorty, yu, urs, shld, you, bak, ye, mayb,
 # Nearest to my: chem, charlie, ma, everrr, panda, your, mah, wittle,
 # Nearest to me: meh, mee, bak, cell, creep, steph, sean, us,
 # Nearest to am: im, iam, dealer, eee, youre, personally, wayyy, messaged,
