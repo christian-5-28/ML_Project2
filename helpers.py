@@ -70,8 +70,8 @@ def create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
     start_time = datetime.datetime.now()
     for line in positive_files:
         index_counter = 0
-        cleaned_line = clean_sentences(line)  # Cleaning the sentence
-        split = cleaned_line.split()
+        split = clean_sentences_eigil(line)  # Cleaning the sentence
+        # split = cleaned_line.split()
 
         for word in split:
             try:
