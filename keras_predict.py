@@ -1,6 +1,6 @@
 from keras.models import model_from_json
 import numpy as np
-from helpers import *
+from ML_Project2.helpers import *
 
 model_path = 'keras_files/crnn2_model.json'
 weights_path = "keras_files/crnn2_weights.h5"

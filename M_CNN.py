@@ -1,9 +1,11 @@
+from keras.layers import ZeroPadding1D
+
 from ML_Project2.helpers import *
 
 ##################SCRIPT##################
 
-path_positive = "data/twitter-datasets/train_pos_full.txt"
-path_negative = "data/twitter-datasets/train_neg_full.txt"
+path_positive = "data/twitter-datasets/train_pos.txt"
+path_negative = "data/twitter-datasets/train_neg.txt"
 
 numWords = []
 positive_files_total = []
@@ -53,86 +55,60 @@ embedding_size = 50  # first time
 # embedding_size = 50
 num_classes = 2
 
-# convolution parameters
-
-filters_shapes = [2, 4, 5]
-input_shape = (max_seq_length, embedding_size)
-number_of_filters = 100
-
-# RNN parameters
-lstm_output_size = 100
-
 # Training
 batch_size = 50
-epochs = 3
+epochs = 2
 
-#creating the model structure
+
+# convolution parameters
+
+nb_filter = 200
+filter_length = 6
+hidden_dims = nb_filter
+
+embedding_matrix = np.load("ids_train_not_full.npy")
+max_features = 400000
+embedding_dims = 50
 
 model = Sequential()
-# First layer, embedding
-model.add(Embedding(max_features, embedding_size, input_length=max_seq_length))  # w\o wordVectors - old one
 
-# Prevent overfitting
-model.add(Dropout(0.5))
+# main_input = Input(batch_shape=(None, max_seq_length), dtype='int32', name='main_input')
 
-model.summary()
+model.add(Embedding(max_features, embedding_dims, init='lecun_uniform', input_length=max_seq_length))
 
-# creating the parallel convolution layers
-conv_model = conv_different_kernels(number_of_filters, filters_shapes, max_sentence_length=max_seq_length, input_dim=input_shape)
+model.add(ZeroPadding1D(filter_length - 1))
 
-
-conv_model.summary()
-
-model.add(conv_model)
-model.add(Dropout(0.5))
-
-# Adding LSTM layer
-model.add(LSTM(lstm_output_size))
-
-'''
-# add second conv layer
-model.add(Conv1D(number_of_filters,
-                 3,
-                 padding='same',
+model.add(Conv1D(nb_filter=nb_filter,
+                 filter_length=filter_length,
+                 border_mode='valid',
                  activation='relu',
-                 strides=1))
-                 
+                 subsample_length=1))
 
-filter_dim = 3
-model.add(MaxPooling1D(6 - filter_dim + 1))
+model.add(MaxPooling1D(pool_length=4, stride=2))
 
-'''
-# Prevent overfitting
-# model.add(Dropout(0.25))
+conv2 = Conv1D(nb_filter=nb_filter,
+                 filter_length=filter_length,
+                 border_mode='valid',
+                 activation='relu',
+                 subsample_length=1)
 
-#model.add(Flatten())
-#model.add(Dense(1000, activation='sigmoid'))
-model.add(Dense(1, activation='sigmoid'))
+model.add(conv2)
 
+output_shape = model.output_shape
 
-#model.add(Dense(1))
+model.add(MaxPooling1D(pool_length=output_shape[1]))
 
-#model.add(Activation('sigmoid'))
+model.add(Flatten())
 
-'''model.add(Flatten())
-model.add(Dense(1000, activation='relu'))
-model.add(Dense(num_classes, activation='softmax'))
+model.add(Dense(hidden_dims))
 
-model.compile(loss='binary_crossentropy',
-              optimizer='adam',
-              metrics=['accuracy'])
-'''
+model.add(Dense(1, activation='softmax', init='lecun_uniform'))
 
 model.summary()
 
 model.compile(loss='binary_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
-
-print('Train...')
-print(y_train.shape)
-print(x_train.shape)
-
 
 model.fit(x_train, y_train,
           batch_size=batch_size,
@@ -144,30 +120,8 @@ print('Test accuracy:', acc)
 
 # serialize model to JSON
 model_json = model.to_json()
-with open("crnn2_model.json", "w") as json_file:
+with open("M_CNN_model.json", "w") as json_file:
     json_file.write(model_json)
 # serialize weights to HDF5
-model.save_weights("crnn2_weights.h5")
+model.save_weights("M_CNN_weights.h5")
 print("Saved model to disk")
-
-
-
-
-'''
-
-model.add(Dropout(0.25))
-model.add(Flatten(input_shape=input_shape))
-model.add(Dense(128))
-model.add(Activation('relu'))
-model.add(Dense(128))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
-model.add(Dense(nb_classes))
-model.add(Activation('tanh'))
-'''
-
-
-
-
-
-

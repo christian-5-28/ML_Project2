@@ -36,7 +36,7 @@ positive_files = positive_files_total
 negative_files = negative_files_total
 num_files_mini = len(positive_files) + len(negative_files)
 
-ids = np.load('ids_final.npy')
+ids = np.load('ids_train_not_full.npy')
 
 x_train, x_test, y_train, y_test = split_data(ids, 0.8)
 
@@ -45,8 +45,8 @@ print('Build model...')
 # embedding parameters
 max_features = 400000
 max_seq_length = int(sum(numWords) / len(numWords)) + 5
-# embedding_size = 64  # first time
-embedding_size = 128  # first time
+embedding_size = 64  # first time
+# embedding_size = 128  # first time
 # embedding_size = 50
 num_classes = 2
 
@@ -57,7 +57,7 @@ input_shape = (max_seq_length, embedding_size)
 number_of_filters = 100
 
 # RNN parameters
-lstm_output_size = 100
+lstm_output_size = 64
 
 # Training
 batch_size = 50
@@ -68,14 +68,16 @@ epochs = 2
 model = Sequential()
 # First layer, embedding
 model.add(Embedding(max_features, embedding_size, input_length=max_seq_length))  # w\o wordVectors - old one
+# model.add(Embedding(max_features, embedding_size, weights=[wordVectors], input_length=max_seq_length))
 
 # Prevent overfitting
-# model.add(Dropout(0.25))
+model.add(Dropout(0.25))
 
 for index in range(0, 3):
     model = add_convolutional_block(model, pow(2, index)*128, 3, max_seq_length)
+    model.add(Dropout(0.25))
 
-#model.add(Dropout(0.25))
+# model.add(Dropout(0.25))
 
 # Adding LSTM layer
 model.add(LSTM(lstm_output_size))

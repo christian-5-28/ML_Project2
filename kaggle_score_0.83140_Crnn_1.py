@@ -97,8 +97,8 @@ Only 2 epochs are needed as the dataset is very small.
 # # print('x_train shape:', x_train.shape)
 # print('x_test shape:', x_test.shape)
 
-path_positive = "twitter-datasets/train_pos_full.txt"
-path_negative = "twitter-datasets/train_neg_full.txt"
+path_positive = "data/twitter-datasets/train_pos.txt"
+path_negative = "data/twitter-datasets/train_neg.txt"
 
 numWords = []
 positive_files_total = []
@@ -142,6 +142,7 @@ negative_files = negative_files_total
 num_files_mini = len(positive_files) + len(negative_files)
 
 ids = np.load('ids_final.npy')
+# ids = np.load('ids_train_not_full.npy')
 
 x_train, x_test, y_train, y_test = split_data(ids, 0.8)
 
@@ -164,14 +165,14 @@ lstm_output_size = 64
 
 # Training
 batch_size = 50
-epochs = 2
+epochs = 5
 
 model = Sequential()
 # First layer, embedding
 # model.add(Embedding(max_features, embedding_size, input_length=max_seq_length))  # w\o wordVectors - old one
-model.add(Embedding(max_features, embedding_size, weights=[wordVectors], input_length=max_seq_length))
+# model.add(Embedding(max_features, embedding_size, weights=[wordVectors], input_length=max_seq_length))
 # TODO: To try
-# model.add(Embedding(max_features, embedding_size, weights=[wordVectors], input_length=max_seq_length, trainable=False))
+model.add(Embedding(max_features, embedding_size, weights=[wordVectors], input_length=max_seq_length, trainable=False))
 # Prevent overfitting
 model.add(Dropout(0.25))
 # First real layer, convolutional layer

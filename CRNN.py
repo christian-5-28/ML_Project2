@@ -8,7 +8,7 @@ from keras.layers import Dense, Dropout, Activation
 from keras.layers import Embedding
 from keras.layers import LSTM
 from keras.layers import Conv1D, MaxPooling1D
-from helpers import *
+from ML_Project2.helpers import *
 from keras.datasets import imdb
 import numpy as np
 import re
@@ -22,7 +22,9 @@ def create_word_list(documents):
     word_set = set()
 
     for document in documents:
-        word_set.update(clean_sentences(document).split())
+        split = clean_sentences(document).split()
+        for word in split:
+            word_set.add(str.encode(word))
 
     # TODO: comment
     np.save('words_list_tweets.npy', list(word_set))
