@@ -2,6 +2,54 @@ import pandas as pd
 import numpy as np
 import re
 import datetime
+import numpy as np
+import re
+from random import randint
+import tensorflow as tf
+import keras
+from keras import Model, Input, Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Embedding, Dropout, Conv1D, MaxPooling1D, Activation, \
+    LSTM, BatchNormalization, Merge
+from keras.utils import plot_model
+
+
+def create_word_list(documents):
+
+    word_set = set()
+
+    for document in documents:
+        split = clean_sentences(document).split()
+        for word in split:
+            word_set.add(str.encode(word))
+
+    np.save('words_list_tweets.npy', list(word_set))
+    return list(word_set)
+
+
+def create_word_list2(documents):
+
+    word_dict = {}
+    for document in documents:
+        # TODO: Eigil, change to your clean_sentences()
+        split = clean_sentences(document).split()
+        for word in split:
+            if word not in word_dict:
+                word_dict[word] = 1
+            else:
+                word_dict[word] += 1
+
+    # TODO: here to the skipgrams
+
+    # TODO: add to a list (set) every word in the dict with value >= 15
+    word_set = set()
+    for key, value in word_dict.items():
+        if value >= 15:
+            word_set.add(str.encode(key))
+
+    np.save('words_list_tweets.npy', list(word_set))
+    return list(word_set)
+
+
 
 
 def clean_sentences(string):
@@ -153,15 +201,6 @@ def load_lexicons():
     emotions.reset_index(inplace=True)
 
     return emotions
-import numpy as np
-import re
-from random import randint
-import tensorflow as tf
-import keras
-from keras import Model, Input, Sequential
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Embedding, Dropout, Conv1D, MaxPooling1D, Activation, \
-    LSTM, BatchNormalization, Merge
-from keras.utils import plot_model
 
 
 def split_data(x, ratio, seed=1):
