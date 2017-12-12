@@ -44,26 +44,27 @@ def clean_sentences(string):
     string = string.replace("'s", " is")
     string = string.replace("#", "<hashtag> ")
     string = string.replace("lol", "laugh")
+    string = string.replace("<3", "love")
+
+    strip_special_chars = re.compile("[^A-Za-z0-9 ]+")
+    re.sub(strip_special_chars, "", string.lower())
 
     # Tokenizes string:
-    # string = string.split()
-    string = tokenize(string)
+    string = string.split()
+    # string = tokenize(string)
 
-
-    # Replaces <3 symbols
-    string = [w.replace("<3", "love") for w in string]
 
     # Replaces numbers with the keyword <number>
-    string = [re.sub(r'\d+[.]?[\d*]?$', '<number>', w) for w in string]
+    # string = [re.sub(r'\d+[.]?[\d*]?$', '<number>', w) for w in string]
 
-    # Won't = will not, shan't = shall not
+    # Won't = will not, shan't = shall not, can't = can not
     string = [w.replace("wo", "will") for w in string]
     string = [w.replace("ca", "can") for w in string]
     string = [w.replace("sha", "shall") for w in string]
 
     # Any token which expresses laughter is replaced with "laugh"
     for i, word in enumerate(string):
-        if "haha" in word or re.match(r'^haha', word) or re.match(r'^ahaha', word):
+        if "haha" in word:
             string[i] = word.replace(word, "laugh")
 
     return string
@@ -162,9 +163,9 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 
 '''Gensim model computation, either load existing or compute from scratch'''
 # TODO: for info on params check, https://radimrehurek.com/gensim/models/word2vec.html
-# model = models.Word2Vec.load("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/gensim models/model1")
-model = models.word2vec.Word2Vec(sentences, sg=1, iter=10, min_count=15, size=300, workers=3,
-                                 negative=5)
+model = models.Word2Vec.load("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/gensim models/model2")
+# model = models.word2vec.Word2Vec(sentences, sg=1, iter=10, min_count=15, size=300, workers=3,
+#                                  negative=5)
 
 '''Some possibilities for the wv object'''
 # # A word vector for some word, can be accessed like this:
@@ -195,7 +196,7 @@ embedding_matrix = np.zeros((len(model.wv.vocab), vector_dim))
 for i in range(len(model.wv.vocab)):
     embedding_vector = model.wv[model.wv.index2word[i]]
     if embedding_vector is not None:
-        embedding_matrix[i] = embedding_vector
+        embedding_matrix[i] = embedding_vector  # add comma?
 
 thefile = open('vocab.txt', 'w')
 for item in str_data:
@@ -206,6 +207,14 @@ for item in index_data:
     thefile1.write("%s\n" % item)
 
 np.savetxt('wordvecs.txt', embedding_matrix)
+
+# If unable to retrieve dicitonary directly from gensim:
+# wordvec = list()
+# final_dict = {}
+# for word in dictionary:
+#     wordvec.extend(model.wv[word])  # saves vectors (add comma?)
+#     final_dict[word].key += 1  # saves word and index
+
 
 
 '''Validation of the similiar words with Keras (for qualitative analysis)'''

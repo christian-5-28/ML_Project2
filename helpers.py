@@ -298,6 +298,43 @@ def add_conv_block_filter_sizes(num_filters, max_sentence_length, filter_shapes,
 
     return model
 
+def clean_sentences(string):
+    # Lowercases whole sentence, and then replaces the following
+    string = string.lower().replace("<br />", " ")
+    string = string.replace("n't", " not")
+    string = string.replace("'m", " am")
+    string = string.replace("'ll", " will")
+    string = string.replace("'d", " would")
+    string = string.replace("'ve", " have")
+    string = string.replace("'re", " are")
+    string = string.replace("'s", " is")
+    string = string.replace("#", "<hashtag> ")
+    string = string.replace("lol", "laugh")
+    string = string.replace("<3", "love")
+
+    strip_special_chars = re.compile("[^A-Za-z0-9 ]+")
+    re.sub(strip_special_chars, "", string.lower())
+
+    # Tokenizes string:
+    string = string.split()
+    # string = tokenize(string)
+
+
+    # Replaces numbers with the keyword <number>
+    # string = [re.sub(r'\d+[.]?[\d*]?$', '<number>', w) for w in string]
+
+    # Won't = will not, shan't = shall not, can't = can not
+    string = [w.replace("wo", "will") for w in string]
+    string = [w.replace("ca", "can") for w in string]
+    string = [w.replace("sha", "shall") for w in string]
+
+    # Any token which expresses laughter is replaced with "laugh"
+    for i, word in enumerate(string):
+        if "haha" in word:
+            string[i] = word.replace(word, "laugh")
+
+    return string
+
 
 
 
