@@ -32,35 +32,35 @@ with open(path_test, "r") as f:
         test_files.append(line)
 
 
-# ids_test = np.zeros((len(test_files), max_seq_length), dtype='int32')
-# indices = []
-#
-# file_counter = 0
-# for line in test_files:
-#     indices.append(line[0])
-#     # print(line)
-#     line = line[2:]
-#     # print(line)
-#     index_counter = 0
-#     cleaned_line = clean_sentences(line)  # Cleaning the sentence
-#     split = cleaned_line.split()
-#
-#     for word in split:
-#         try:
-#             ids_test[file_counter][index_counter] = wordsList.index(word)
-#         except ValueError:
-#             ids_test[file_counter][index_counter] = 399999  # Vector for unkown words
-#         index_counter = index_counter + 1
-#
-#         # If we have already seen maxSeqLength words, we break the loop of the words of a tweet
-#         if index_counter >= max_seq_length:
-#             break
-#     file_counter = file_counter + 1
-#
-#     if file_counter % 100 == 0:
-#         print("Steps to end (test): " + str(len(test_files) - file_counter))
-#
-# np.save('ids_test.npy', ids_test)
+ids_test = np.zeros((len(test_files), max_seq_length), dtype='int32')
+indices = []
+
+file_counter = 0
+for line in test_files:
+    comma_index = line.index(',')
+    indices.append(line[:comma_index])
+    line = line[comma_index+1:]
+    # print(line)
+    index_counter = 0
+    cleaned_line = clean_sentences(line)  # Cleaning the sentence
+    split = cleaned_line.split()
+
+    for word in split:
+        try:
+            ids_test[file_counter][index_counter] = wordsList.index(word)
+        except ValueError:
+            ids_test[file_counter][index_counter] = 399999  # Vector for unkown words
+        index_counter = index_counter + 1
+
+        # If we have already seen maxSeqLength words, we break the loop of the words of a tweet
+        if index_counter >= max_seq_length:
+            break
+    file_counter = file_counter + 1
+
+    if file_counter % 100 == 0:
+        print("Steps to end (test): " + str(len(test_files) - file_counter))
+
+np.save('ids_test.npy', ids_test)
 
 ids_test = np.load('ids_test.npy')
 

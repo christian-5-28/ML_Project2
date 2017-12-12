@@ -6,67 +6,8 @@ import re
 import logging
 from keras import layers, preprocessing
 from keras import models as mods
-import random
-
-def tokenize(s):
-    # Heart symbol
-    emoticons_str = r"""
-        (?:
-            [<] # heart top
-            [3] # heart bottom
-        )"""
-
-    regex_str = [
-        emoticons_str,
-        r'<[^>]+>',  # HTML tags
-        r'(?:@[\w_]+)',  # @-mentions
-        r"(?:\#+[\w_]+[\w\'_\-]*[\w_]+)",  # hash-tags
-        r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+',  # URLs
-
-        r'(?:(?:\d+,?)+(?:\.?\d+)?)',  # numbers
-        r"(?:[a-z][a-z'\-_]+[a-z])",  # words with - and '
-        r'(?:[\w_]+)',  # other words
-        r'(?:\S)'  # anything else
-    ]
-    tokens_re = re.compile(r'(' + '|'.join(regex_str) + ')', re.VERBOSE | re.IGNORECASE)
-    return tokens_re.findall(s)
-
-
-def clean_sentences(string):
-    # Lowercases whole sentence, and then replaces the following
-    string = string.lower().replace("<br />", " ")
-    string = string.replace("n't", " not")
-    string = string.replace("'m", " am")
-    string = string.replace("'ll", " will")
-    string = string.replace("'d", " would")
-    string = string.replace("'ve", " have")
-    string = string.replace("'re", " are")
-    string = string.replace("'s", " is")
-    string = string.replace("#", "<hashtag> ")
-    string = string.replace("lol", "laugh")
-
-    # Tokenizes string:
-    # string = string.split()
-    string = tokenize(string)
-
-
-    # Replaces <3 symbols
-    string = [w.replace("<3", "love") for w in string]
-
-    # Replaces numbers with the keyword <number>
-    string = [re.sub(r'\d+[.]?[\d*]?$', '<number>', w) for w in string]
-
-    # Won't = will not, shan't = shall not
-    string = [w.replace("wo", "will") for w in string]
-    string = [w.replace("ca", "can") for w in string]
-    string = [w.replace("sha", "shall") for w in string]
-
-    # Any token which expresses laughter is replaced with "laugh"
-    for i, word in enumerate(string):
-        if "haha" in word or re.match(r'^haha', word) or re.match(r'^ahaha', word):
-            string[i] = word.replace(word, "laugh")
-
-    return string
+from helpers import *
+import io
 
 def combine_pos_neg():
     '''Combines the postive and negative files, maybe not needed in final version'''
@@ -136,79 +77,65 @@ class MySentences(object):
 
     def __iter__(self):
         for fname in os.listdir(self.dirname):
-            for line in open(os.path.join(self.dirname, fname)):
-                yield clean_sentences(line)
+            for line in io.open(os.path.join(self.dirname, fname), 'r', encoding="utf-8", errors="replace"):
+                yield clean_sentences_eigil(line)
 
 
 # Based on:
-# TODO: http://mccormickml.com/2016/04/19/word2vec-tutorial-the-skip-gram-model/
-# TODO: http://adventuresinmachinelearning.com/gensim-word2vec-tutorial/
-# and
-# TODO: https://rare-technologies.com/word2vec-tutorial/
-
-# TODO: try simple tokenization (+strip special chars), introduce phrases, figure out subsampling, add del to clear mem.
-
-# path_positive = "twitter-datasets/train_pos.txt"
-# path_negative = "twitter-datasets/train_neg.txt"
+# http://mccormickml.com/2016/04/19/word2vec-tutorial-the-skip-gram-model/
+# http://adventuresinmachinelearning.com/gensim-word2vec-tutorial/
+# https://rare-technologies.com/word2vec-tutorial/
+# TODO: figure out subsampling, add del to clear mem.
+# TODO: CARRY OUT ON EVERYTHING INCLUDING TESTSET
 
 '''Loading senctences in a memory-friendly way, needs full path'''
-sentences = MySentences("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/combined_tweets")  # a memory-friendly iterator
+sentences = MySentences("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/test_tweets")  # a memory-friendly iterator
 # sentences = MyCorpus()
-vector_dim = 300  # dimensions of word vectors
+vector_dim = 300  # dimensions of word vectors = 300
 
 
 '''For logging the process'''
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 '''Gensim model computation, either load existing or compute from scratch'''
-# TODO: for info on params check, https://radimrehurek.com/gensim/models/word2vec.html
-# model = models.Word2Vec.load("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/gensim models/model1")
-model = models.word2vec.Word2Vec(sentences, sg=1, iter=10, min_count=15, size=300, workers=3,
-                                 negative=5)
+# model = models.Word2Vec.load("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/gensim models/model3")
+model = models.word2vec.Word2Vec(sentences, sg=1, iter=10, min_count=10, size=300, workers=3, negative=5)
 
-'''Some possibilities for the wv object'''
-# # A word vector for some word, can be accessed like this:
-# print(model.wv['the'])
+'''Generate word list from gensim model'''
+# Iterates through every word vector from the model, and extracts the corresponding word.
+word_vecs = np.zeros((len(model.wv.vocab), vector_dim))
+dictionary = []
+indices = []
+for i in range(len(model.wv.vocab)):
+    vector = model.wv[model.wv.index2word[i]]
+    if vector is None:
+        print('none: ', model.wv.index2word[i])
+    if vector is not None:
+        word_vecs[i] = vector  # add comma?
+        dictionary.append(model.wv.index2word[i])
+        indices.append(i)
 
-# get the most common words
-print(model.wv.index2word[0], model.wv.index2word[1], model.wv.index2word[2])
-
-# get the least common words
-vocab_size = len(model.wv.vocab)
-print(model.wv.index2word[vocab_size - 1], model.wv.index2word[vocab_size - 2], model.wv.index2word[vocab_size - 3])
-
-'''Extracting vocabulary and the indexes'''
-path_combined = "combined_tweets/combined_full.txt"
-# convert the input data into a list of integer indexes aligning with the wv indexes
-str_data = read_data(path_combined)
-index_data = convert_data_to_index(str_data, model.wv)
-print(str_data[:4], index_data[:4])
+# unknown word vector for unknown words, with the token UNK:
+word_vecs = np.vstack((word_vecs, np.random.rand(1, vector_dim)))
+print(word_vecs.shape)
+dictionary.append('UNK')
+indices.append(len(indices)+1)
 
 
-'''Saving and converting'''
+'''Saving'''
 # saves the model
-model.save("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/gensim models/model2")
+# model.save("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/gensim models/model3")
+np.savetxt('wordvecs.txt', word_vecs)
+np.savetxt('word_list_test.txt', dictionary, fmt="%s")
 
-# convert the wv word vectors into a numpy matrix that is suitable for insertion
-# into our TensorFlow and Keras models
+
+'''Validation of the similiar words with Keras (for qualitative analysis)'''
 embedding_matrix = np.zeros((len(model.wv.vocab), vector_dim))
 for i in range(len(model.wv.vocab)):
     embedding_vector = model.wv[model.wv.index2word[i]]
     if embedding_vector is not None:
         embedding_matrix[i] = embedding_vector
 
-thefile = open('vocab.txt', 'w')
-for item in str_data:
-    thefile.write("%s\n" % item)
-
-thefile1 = open('vocab_indeces.txt', 'w')
-for item in index_data:
-    thefile1.write("%s\n" % item)
-
-np.savetxt('wordvecs.txt', embedding_matrix)
-
-
-'''Validation of the similiar words with Keras (for qualitative analysis)'''
 valid_size = 16  # Random set of words to evaluate similarity on.
 valid_window = 100  # Only pick dev samples in the head of the distribution.
 valid_examples = np.random.choice(valid_window, valid_size, replace=False)
@@ -239,7 +166,7 @@ for i in range(valid_size):
 
 
 
-    # Nearest to u: shorty, yu, urs, shld, you, bak, ye, mayb,
+# Nearest to u: shorty, yu, urs, shld, you, bak, ye, mayb,
 # Nearest to my: chem, charlie, ma, everrr, panda, your, mah, wittle,
 # Nearest to me: meh, mee, bak, cell, creep, steph, sean, us,
 # Nearest to am: im, iam, dealer, eee, youre, personally, wayyy, messaged,
@@ -272,3 +199,22 @@ for i in range(valid_size):
 # Nearest to go: goto, went, qo, going, studyyy, playyy, come, goin,
 # Nearest to ,: kalyra, hy-gear, and, mils, te-co, sesmark, ., bigelow,
 # Nearest to <user>: rt, jeeze, !, herh, oook, laugh, evuls, awwn,
+
+
+# TODO: DELETE MESS BELOW, NOT USED
+'''Extracting vocabulary and the indexes'''
+# path_combined = "combined_tweets/combined_full.txt"
+# # convert the input data into a list of integer indexes aligning with the wv indexes
+# str_data = read_data(path_combined)
+# index_data = convert_data_to_index(str_data, model.wv)
+
+'''Some possibilities for the wv object - NOT USED IN GENERATION OF WORDVECS'''
+# # # A word vector for some word, can be accessed like this:
+# # print(model.wv['the'])
+#
+# # get the most common words
+# print(model.wv.index2word[0], model.wv.index2word[1], model.wv.index2word[2])
+#
+# # get the least common words
+# vocab_size = len(model.wv.vocab)
+# print(model.wv.index2word[vocab_size - 1], model.wv.index2word[vocab_size - 2], model.wv.index2word[vocab_size - 3])

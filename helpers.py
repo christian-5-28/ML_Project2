@@ -7,7 +7,7 @@ import re
 from random import randint
 import tensorflow as tf
 import keras
-from keras import Model, Input, Sequential
+from keras.models import Model, Input, Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Embedding, Dropout, Conv1D, MaxPooling1D, Activation, \
     LSTM, BatchNormalization, Merge
 from keras.utils import plot_model
@@ -16,11 +16,15 @@ from keras.utils import plot_model
 def create_word_list(documents):
 
     word_set = set()
-
+    i = 0
     for document in documents:
+        if i % 10000 == 0:
+            print('Step to the end: ', len(documents) - i)
         split = clean_sentences(document).split()
         for word in split:
             word_set.add(str.encode(word))
+
+        i += 1
 
     np.save('words_list_tweets.npy', list(word_set))
     return list(word_set)
@@ -29,27 +33,27 @@ def create_word_list(documents):
 def create_word_list2(documents):
 
     word_dict = {}
+    i = 0
     for document in documents:
-        # TODO: Eigil, change to your clean_sentences()
-        split = clean_sentences(document).split()
+        if i % 10000 == 0:
+            print('Step to the end: ', len(documents) - i)
+        split = clean_sentences_eigil(document)
         for word in split:
             if word not in word_dict:
                 word_dict[word] = 1
             else:
                 word_dict[word] += 1
+        i += 1
 
-    # TODO: here to the skipgrams
-
-    # TODO: add to a list (set) every word in the dict with value >= 15
     word_set = set()
     for key, value in word_dict.items():
         if value >= 15:
             word_set.add(str.encode(key))
 
-    np.save('words_list_tweets.npy', list(word_set))
+
+
+    np.save('words_list_tweets_final.npy', list(word_set))
     return list(word_set)
-
-
 
 
 def clean_sentences(string):
@@ -66,14 +70,14 @@ def create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
     start_time = datetime.datetime.now()
     for line in positive_files:
         index_counter = 0
-        cleaned_line = clean_sentences(line)  # Cleaning the sentence
-        split = cleaned_line.split()
+        split = clean_sentences_eigil(line)  # Cleaning the sentence
+        # split = cleaned_line.split()
 
         for word in split:
             try:
                 ids[file_counter][index_counter] = wordsList.index(word)
             except ValueError:
-                ids[file_counter][index_counter] = len(wordsList)  # Vector for unkown words
+                ids[file_counter][index_counter] = len(wordsList)  # Vector for unknown words
             index_counter = index_counter + 1
 
             # If we have already seen maxSeqLength words, we break the loop of the words of a tweet
@@ -297,6 +301,44 @@ def add_conv_block_filter_sizes(num_filters, max_sentence_length, filter_shapes,
     model = Model(input_, outputs=merged)
 
     return model
+
+def clean_sentences_eigil(string):
+    # Lowercases whole sentence, and then replaces the following
+    string = string.lower().replace("<br />", " ")
+    string = string.replace("n't", " not")
+    string = string.replace("'m", " am")
+    string = string.replace("'ll", " will")
+    string = string.replace("'d", " would")
+    string = string.replace("'ve", " have")
+    string = string.replace("'re", " are")
+    string = string.replace("'s", " is")
+    string = string.replace("#", "<hashtag> ")
+    string = string.replace("lol", "laugh")
+    string = string.replace("<3", "love")
+    string = string.replace("<user>", "")
+    string = string.replace("<url>", "")
+
+    strip_special_chars = re.compile("[^A-Za-z0-9 ]+")
+
+    # Tokenizes string:
+    string = string.split()
+    # string = tokenize(string)
+
+
+    # Replaces numbers with the keyword <number>
+    # string = [re.sub(r'\d+[.]?[\d*]?$', '<number>', w) for w in string]
+
+    # Won't = will not, shan't = shall not, can't = can not
+    string = [w.replace("wo", "will") for w in string]
+    string = [w.replace("ca", "can") for w in string]
+    string = [w.replace("sha", "shall") for w in string]
+
+    # Any token which expresses laughter is replaced with "laugh"
+    # for i, word in enumerate(string):
+    #     if "haha" in word:
+    #         string[i] = word.replace(word, "laugh")
+
+    return re.sub(strip_special_chars, "", string.lower())
 
 
 
