@@ -312,13 +312,14 @@ def clean_sentences_eigil(string):
     string = string.replace("'ve", " have")
     string = string.replace("'re", " are")
     string = string.replace("'s", " is")
-    string = string.replace("#", "<hashtag> ")
+    string = string.replace("#", "<hashhtagg> ")
     string = string.replace("lol", "laugh")
     string = string.replace("<3", "love")
     string = string.replace("<user>", "")
     string = string.replace("<url>", "")
 
     strip_special_chars = re.compile("[^A-Za-z0-9 ]+")
+    string = re.sub(strip_special_chars, "", string.lower())
 
     # Tokenizes string:
     string = string.split()
@@ -338,10 +339,59 @@ def clean_sentences_eigil(string):
     #     if "haha" in word:
     #         string[i] = word.replace(word, "laugh")
 
-    return re.sub(strip_special_chars, "", string.lower())
+    return string
+
+def remove_test_ids(path_test):
+    test_files_total = []
+    with open(path_test, "r") as f:
+        for line in f:
+            comma_index = line.index(',')
+            line = line[comma_index + 1:]
+            test_files_total.append(line)
+    return np.savetxt('test_files_no_ids.txt', test_files_total, fmt="%s")
 
 
+def combine_data():
+    '''Combines the postive and negative files, maybe not needed in final version'''
+    filenames = ['twitter-datasets/train_pos_full.txt', 'twitter-datasets/train_neg_full.txt', 'test_files_no_ids.txt']
+    filenames2 = ['twitter-datasets/train_pos.txt', 'twitter-datasets/train_neg.txt', 'test_files_no_ids.txt']
+    with open('twitter-datasets/combined_full.txt', 'w') as outfile:
+        for fname in filenames:
+            with open(fname) as infile:
+                for line in infile:
+                    outfile.write(line)
 
+    with open('twitter-datasets/combined.txt', 'w') as outfile:
+        for fname in filenames2:
+            with open(fname) as infile:
+                for line in infile:
+                    outfile.write(line)
+    return
+
+
+def tokenize(s):
+    '''Twitter customized tokenizer, NOT USED AT THE MOMENT'''
+    # Heart symbol
+    emoticons_str = r"""
+        (?:
+            [<] # heart top
+            [3] # heart bottom
+        )"""
+
+    regex_str = [
+        emoticons_str,
+        r'<[^>]+>',  # HTML tags
+        r'(?:@[\w_]+)',  # @-mentions
+        r"(?:\#+[\w_]+[\w\'_\-]*[\w_]+)",  # hash-tags
+        r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+',  # URLs
+
+        r'(?:(?:\d+,?)+(?:\.?\d+)?)',  # numbers
+        r"(?:[a-z][a-z'\-_]+[a-z])",  # words with - and '
+        r'(?:[\w_]+)',  # other words
+        r'(?:\S)'  # anything else
+    ]
+    tokens_re = re.compile(r'(' + '|'.join(regex_str) + ')', re.VERBOSE | re.IGNORECASE)
+    return tokens_re.findall(s)
 
 
 
