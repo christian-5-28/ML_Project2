@@ -1,5 +1,5 @@
 import numpy as np
-from helpers import clean_sentences_eigil
+from helpers import clean_sentences
 
 #Preprocessing all tweets and creating ids, took 25h....
 
@@ -45,7 +45,7 @@ ids = np.zeros((num_files_mini, max_seq_length), dtype='int32')
 file_counter = 0
 for line in positive_files:
     index_counter = 0
-    split = clean_sentences_eigil(line)  # Cleaning the sentence
+    split = clean_sentences(line)  # Cleaning the sentence
 
     for word in split:
         try:
@@ -63,7 +63,7 @@ del positive_files
 
 for line in negative_files:
     index_counter = 0
-    split = clean_sentences_eigil(line)
+    split = clean_sentences(line)
 
     for word in split:
         try:

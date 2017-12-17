@@ -8,6 +8,7 @@ from keras import layers, preprocessing
 from keras import models as mods
 from helpers import *
 import io
+import matplotlib.pyplot as plt
 import datetime
 
 
@@ -28,19 +29,19 @@ def combine_pos_neg():
                     outfile.write(line)
     return
 
-
-def read_data(path_comb):
-    """Extract the first tweets enclosed as a list of words."""
-    all_files_total = []
-    with open(path_comb, "r") as f:
-        for line in f:
-            all_files_total.append(line)
-
-    vocabulary = list()
-    for line in all_files_total[:1000]:
-        cleaned_line = clean_sentences(line)  # Cleaning the sentence
-        vocabulary.extend(cleaned_line)  # Creating a list of all words in our tweets
-    return vocabulary
+# TODO: didn't find any usage - TO DELETE
+# def read_data(path_comb):
+#     """Extract the first tweets enclosed as a list of words."""
+#     all_files_total = []
+#     with open(path_comb, "r") as f:
+#         for line in f:
+#             all_files_total.append(line)
+#
+#     vocabulary = list()
+#     for line in all_files_total[:1000]:
+#         cleaned_line = clean_sentences(line)  # Cleaning the sentence
+#         vocabulary.extend(cleaned_line)  # Creating a list of all words in our tweets
+#     return vocabulary
 
 
 def convert_data_to_index(string_data, wv):
@@ -71,16 +72,19 @@ def get_sim(valid_word_idx, vocab_size):
 #             yield line
 #
 
-'''Iterator object that iterates through files in directory, picking every sentence from the file.
-This is why "combined_full.txt" should be placed in its own directory.'''
+
 class MySentences(object):
+    """
+    Iterator object that iterates through files in directory, picking every sentence from the file.
+    This is why "combined_full.txt" should be placed in its own directory.
+    """
     def __init__(self, dirname):
         self.dirname = dirname
 
     def __iter__(self):
         for fname in os.listdir(self.dirname):
             for line in io.open(os.path.join(self.dirname, fname), 'r', encoding="utf-8", errors="replace"):
-                yield clean_sentences_eigil(line)
+                yield clean_sentences(line)
 
 
 # Based on:
@@ -90,15 +94,15 @@ class MySentences(object):
 # TODO: figure out subsampling, add del to clear mem.
 
 '''Loading senctences in a memory-friendly way, needs full path'''
-sentences = MySentences("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/combined_tweets")  # a memory-friendly iterator
-
+sentences = MySentences("combined_tweets")  # a memory-friendly iterator
+# sentences = np.loadtxt('combined_tweets.txt')
 '''For logging the process'''
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 '''Gensim model computation, either load existing or compute from scratch'''
 vector_dim = 300  # dimensions of word vectors = 300
 # model = models.Word2Vec.load("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/gensim models/model_TEST")
-model = models.word2vec.Word2Vec(sentences, sg=1, iter=15, min_count=10, size=vector_dim, workers=4, negative=5)
+model = models.word2vec.Word2Vec(sentences, sg=1, iter=15, min_count=6, size=vector_dim, workers=4, negative=5)
 
 '''Generate word list from gensim model'''
 # Iterates through every word vector from the model, and extracts the corresponding word.
@@ -121,9 +125,9 @@ dictionary.append('UNK')
 
 '''Saving'''
 # saves the model
-model.save("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/gensim models/model_fucking_final")
-np.save('wordvecs_fucking_final.npy', word_vecs)
-np.save('word_list_fucking_final.npy', dictionary)
+model.save("model_sg_2")
+np.save('wordvecs_sg_2.npy', word_vecs)
+np.save('word_list_sg_2.npy', dictionary)
 
 
 '''Validation of the similiar words with Keras (for qualitative analysis)'''
@@ -149,16 +153,16 @@ similarity = layers.merge([embedded_a, embedded_b], mode='cos', dot_axes=2)
 validation_model = mods.Model(input=[valid_word, other_word], output=similarity)
 
 # now run the model and get the closest words to the valid examples
-for i in range(valid_size):
-    valid_word = model.wv.index2word[valid_examples[i]]
-    top_k = 8  # number of nearest neighbors
-    sim = get_sim(valid_examples[i], len(model.wv.vocab))
-    nearest = (-sim).argsort()[1:top_k + 1]
-    log_str = 'Nearest to %s:' % valid_word
-    for k in range(top_k):
-        close_word = model.wv.index2word[nearest[k]]
-        log_str = '%s %s,' % (log_str, close_word)
-    print(log_str)
+# for i in range(valid_size):
+#     valid_word = model.wv.index2word[valid_examples[i]]
+#     top_k = 8  # number of nearest neighbors
+#     sim = get_sim(valid_examples[i], len(model.wv.vocab))
+#     nearest = (-sim).argsort()[1:top_k + 1]
+#     log_str = 'Nearest to %s:' % valid_word
+#     for k in range(top_k):
+#         close_word = model.wv.index2word[nearest[k]]
+#         log_str = '%s %s,' % (log_str, close_word)
+#     print(log_str)
 
 
 del model, embedding_matrix
@@ -192,66 +196,78 @@ print('The total number of files is', num_files_total)
 print('The total number of words in the files is', sum(numWords))
 print('The average number of words in the files is', sum(numWords)/len(numWords))
 
+# Uncomment in order to see the distribution of the number of words in every tweet
+# plt.hist(numWords, 50)
+# plt.xlabel('Sequence Length')
+# plt.ylabel('Frequency')
+# plt.axis([0, 40, 0, 25000])
+# plt.show()
+
+# From plot and average, we can observe that 20 is a good choice as max sequence length
 max_seq_length = 20
+
 
 positive_files = positive_files_total
 negative_files = negative_files_total
-num_files_mini = len(positive_files) + len(negative_files)
+# num_files_mini = len(positive_files) + len(negative_files)
 total_files_length = len(positive_files) + len(negative_files)
 
-'''
-Convert to an ids matrix
-'''
-ids = np.zeros((num_files_mini, max_seq_length), dtype='int32')
-file_counter = 0
-start_time = datetime.datetime.now()
+# TODO: Eigil I changed the create_ids_matrix function as the same lines of code that here below
+create_ids_matrix(positive_files, negative_files, max_seq_length, dictionary)
 
-for line in positive_files:
-    index_counter = 0
-    split = clean_sentences_eigil(line)  # Cleaning the sentence
+# '''
+# Convert to an ids matrix
+# '''
+# ids = np.zeros((num_files_mini, max_seq_length), dtype='int32')
+# file_counter = 0
+# start_time = datetime.datetime.now()
+#
+# for line in positive_files:
+#     index_counter = 0
+#     split = clean_sentences_eigil(line)  # Cleaning the sentence
+#
+#     for word in split:
+#         try:
+#             ids[file_counter][index_counter] = dictionary.index(word)
+#         except ValueError:
+#             ids[file_counter][index_counter] = len(dictionary) - 1  # Vector for unknown positive vectors, not used otherwise
+#         index_counter = index_counter + 1
+#
+#         # If we have already seen maxSeqLength words, we break the loop of the words of a tweet
+#         if index_counter >= max_seq_length:
+#             break
+#
+#     if file_counter % 10000 == 0:
+#         print("Steps to end: " + str(total_files_length - file_counter))
+#         print('Time of execution: ', datetime.datetime.now() - start_time)
+#
+#     file_counter = file_counter + 1
+#
+# del positive_files
+#
+# for line in negative_files:
+#     index_counter = 0
+#     split = clean_sentences_eigil(line)
+#
+#     for word in split:
+#         try:
+#             ids[file_counter][index_counter] = dictionary.index(word)
+#         except ValueError:
+#             ids[file_counter][index_counter] = len(dictionary) - 1  # Vector for unknown negative vectors, not used otherwise
+#         index_counter = index_counter + 1
+#
+#         if index_counter >= max_seq_length:
+#             break
+#
+#     if file_counter % 10000 == 0:
+#         print("Steps to end: " + str(total_files_length - file_counter))
+#         print('Time of execution: ', datetime.datetime.now() - start_time)
+#     file_counter = file_counter + 1
+#
+#
+# np.save('ids_sg_2.npy', ids)
 
-    for word in split:
-        try:
-            ids[file_counter][index_counter] = dictionary.index(word)
-        except ValueError:
-            ids[file_counter][index_counter] = len(dictionary) - 1  # Vector for unknown positive vectors, not used otherwise
-        index_counter = index_counter + 1
-
-        # If we have already seen maxSeqLength words, we break the loop of the words of a tweet
-        if index_counter >= max_seq_length:
-            break
-
-    if file_counter % 10000 == 0:
-        print("Steps to end: " + str(total_files_length - file_counter))
-        print('Time of execution: ', datetime.datetime.now() - start_time)
-
-    file_counter = file_counter + 1
-
-del positive_files
-
-for line in negative_files:
-    index_counter = 0
-    split = clean_sentences_eigil(line)
-
-    for word in split:
-        try:
-            ids[file_counter][index_counter] = dictionary.index(word)
-        except ValueError:
-            ids[file_counter][index_counter] = len(dictionary) - 1  # Vector for unknown negative vectors, not used otherwise
-        index_counter = index_counter + 1
-
-        if index_counter >= max_seq_length:
-            break
-
-    if file_counter % 10000 == 0:
-        print("Steps to end: " + str(total_files_length - file_counter))
-        print('Time of execution: ', datetime.datetime.now() - start_time)
-    file_counter = file_counter + 1
-
-
-np.save('pp_sg_ids_matrix.npy', ids)
-
-ids = np.load('pp_sg__matrix.npy')
+ids = np.load('ids_sg_6.npy')
 print(ids.shape)
 
 # preliminary runs to compare

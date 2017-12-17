@@ -2,8 +2,8 @@ from keras.models import model_from_json
 import numpy as np
 from helpers import *
 
-model_path = 'keras_files/crnn2_model.json'
-weights_path = "keras_files/crnn2_weights.h5"
+model_path = 'keras_files/crnn6_model.json'
+weights_path = "keras_files/crnn6_weights.h5"
 
 # load json and create model
 json_file = open(model_path, 'r')
@@ -16,13 +16,18 @@ print("Loaded model from disk")
 
 loaded_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-ids_test = np.load('ids_test.npy')
+ids_test = np.load('skipgrams/ids_test_sg_2.npy')
 
+print(ids_test[:4])
+fake_ids = []
+for i in range(len(ids_test)):
+    fake_ids.append(ids_test[i].tolist())
 
-prediction = loaded_model.predict(ids_test, verbose=0)
+print(fake_ids[:4])
+prediction = loaded_model.predict(fake_ids, verbose=0)
 
 prediction[prediction >= 0.5] = 1
 prediction[prediction < 0.5] = -1
 prediction = prediction.reshape(-1)
 print(prediction)
-make_submission(prediction, 'Crnn_2')
+make_submission(prediction, 'Crnn_6')
