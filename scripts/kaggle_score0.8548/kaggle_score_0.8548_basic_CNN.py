@@ -1,4 +1,4 @@
-from ML_Project2.helpers import *
+from helpers import *
 
 ##################SCRIPT##################
 

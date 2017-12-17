@@ -203,7 +203,11 @@ def conv_different_kernels(num_filters, kernel_sizes, max_sentence_length, input
 
         convolutional_layers.append(layer)
 
-    merged = keras.layers.concatenate(convolutional_layers, axis=1)
+    if len(convolutional_layers) > 1:
+        merged = keras.layers.concatenate(convolutional_layers, axis=1)
+
+    else:
+        merged = convolutional_layers[0]
 
     model = Model(input_, outputs=merged)
     return model
@@ -342,4 +346,25 @@ def tokenize(s):
     return tokens_re.findall(s)
 
 
+class History(keras.callbacks.Callback):
+    def on_train_begin(self, logs={}):
+        self.losses = []
+        self.accuracy = []
+        self.epocs_losses = []
+        self.epocs_acc = []
+        self.epocs_val_loss = []
+        self.epocs_val_acc = []
 
+    #def on_epoch_begin(self, epoch, logs={}):
+#        self.losses = []
+#       self.accuracy = []
+
+    def on_batch_end(self, batch, logs={}):
+        self.losses.append(logs.get('loss'))
+        self.accuracy.append(logs.get('acc'))
+
+    def on_epoch_end(self, epoch, logs={}):
+        # self.epocs_losses.append(self.losses)
+        # self.epocs_acc.append(self.accuracy)
+        self.epocs_val_loss.append(logs.get('val_loss'))
+        self.epocs_val_acc.append(logs.get('val_acc'))

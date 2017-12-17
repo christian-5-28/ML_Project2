@@ -1,28 +1,6 @@
 from helpers import *
+import matplotlib.pyplot as plt
 
-# loading the tweet datasets
-path_positive = "twitter-datasets/train_pos_full.txt"
-path_negative = "twitter-datasets/train_neg_full.txt"
-
-numWords = []
-positive_files_total = []
-negative_files_total = []
-with open(path_positive, "r") as f:
-    for line in f:
-        positive_files_total.append(line)
-        counter = len(line.split())
-        numWords.append(counter)
-
-with open(path_negative, "r", encoding='utf-8') as f:
-    for line in f:
-        negative_files_total.append(line)
-        counter = len(line.split())
-        numWords.append(counter)
-
-num_files_total = len(numWords)
-print('The total number of files is', num_files_total)
-print('The total number of words in the files is', sum(numWords))
-print('The average number of words in the files is', sum(numWords) / len(numWords))
 
 # loading our dictionary
 wordsList = np.load('skipgrams/word_list_sg_7.npy')
@@ -45,7 +23,7 @@ print('Build model...')
 
 # Here we define embedding parameters useful for the Embedding Layer
 max_features = 83782
-max_seq_length = int(sum(numWords) / len(numWords)) + 5
+max_seq_length = ids.shape[1]
 embedding_size = 300  # first time
 
 
@@ -66,7 +44,7 @@ lstm_output_size = 256
 
 # here we define parameters for the training
 batch_size = 100
-epochs = 10
+epochs = 5
 
 # creating the model structure
 model = Sequential()
@@ -90,8 +68,6 @@ model.add(Dropout(0.1))
 # Adding LSTM layer
 model.add(LSTM(lstm_output_size))
 
-model.add(Dropout(0.1))
-
 # adding the dense layer
 model.add(Dense(1, activation='sigmoid'))
 
@@ -110,11 +86,15 @@ print('Train...')
 print(y_train.shape)
 print(x_train.shape)
 
+# defining our callback to create the plots (loss, accuracy)
+history = History()
+
 # fitting the model with our data
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
-          validation_data=(x_test, y_test))
+          validation_data=(x_test, y_test),
+          callbacks=[history])
 
 # evaluating our model on the test sets
 score, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
@@ -131,6 +111,34 @@ model.save_weights("basic_cnn_weights.h5")
 print("Saved model to disk")
 
 
+# From here, we save our metrics results for the comparison with plots
+smoothed_accuracy = smooth_graph(history.accuracy, 100)
+np.save("smoothed_acc_CNN_LSTM.npy", smoothed_accuracy)
+
+smoothed_losses = smooth_graph(history.losses, 100)
+np.save("smoothed_loss_CNN_LSTM.npy", smoothed_losses)
+
+fig = plt.figure(1)
+plt.plot(smoothed_accuracy)
+
+fig.suptitle('train accuracy', fontsize=20)
+plt.xlabel('number of batches', fontsize=18)
+plt.ylabel('accuracy', fontsize=16)
+
+plt.show()
+fig.savefig('cnn_lstm_accuracy.png')
+plt.close()
+
+fig = plt.figure(2)
+
+plt.plot(smoothed_losses)
+
+fig.suptitle('train loss', fontsize=20)
+plt.xlabel('number of batches', fontsize=18)
+plt.ylabel('loss', fontsize=16)
+plt.show()
+fig.savefig('cnn_lstm_losses.png')
+plt.close()
 
 
 
