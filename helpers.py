@@ -9,6 +9,23 @@ from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Embedding, Dropou
 from keras.utils import plot_model
 
 
+def smooth_graph(y_value_list, smooth_window):
+
+    smoothed_list = []
+
+    for index, element in enumerate(y_value_list):
+
+        window = min(index, smooth_window)
+
+        temp_list = y_value_list[index - window : index + 1]
+
+        mean_value = np.mean(temp_list)
+
+        smoothed_list.append(mean_value)
+
+    return smoothed_list
+
+
 def create_word_list(documents, filter):
     '''
     Create word list of unique words which occurrencies are

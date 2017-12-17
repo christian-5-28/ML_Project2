@@ -212,16 +212,7 @@ logdir = "tensorboard_new/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") 
 '''
 TRAINING - RIGUARDARE
 
-The basic idea of the training loop is that we first define a Tensorflow session. Then, we load in a batch of reviews 
-and their associated labels. Next, we call the session’s run function. This function has two arguments. The first is 
-called the "fetches" argument. It defines the value we’re interested in computing. We want our optimizer to be computed 
-since that is the component that minimizes our loss function. The second argument is where we input our feed_dict. This 
-data structure is where we provide inputs to all of our placeholders. We need to feed our batch of reviews and our batch
-of labels. This loop is then repeated for a set number of training iterations.
-Instead of training the network in this notebook (which will take at least a couple of hours), we’ll load in a 
-pretrained model.
-
-While the following cell is running, use your terminal to enter the directory that contains this notebook, enter 
+While the following code is running, use your terminal to enter the directory that contains this notebook, enter 
 tensorboard --logdir=tensorboard, and visit http://localhost:6006/ with a browser to keep an eye on your training progress.
 
 '''
@@ -252,13 +243,13 @@ for epoch in range(epochs):
         sess.run(optimizer, {input_data: nextBatch, labels: nextBatchLabels})
 
         # Write summary to Tensorboard
-        if i % 50 == 0:
+        if i/batch_size % 50 == 0:
             summary = sess.run(merged, {input_data: nextBatch, labels: nextBatchLabels})
             writer.add_summary(summary, i)
             writer.flush()
 
         # Save the network every 10,000 training iterations
-        if i % 100000 == 0 and i != 0:
+        if i/batch_size % 100000 == 0 and i != 0:
             save_path = saver.save(sess, "models_new/pretrained_lstm.ckpt", global_step=i)
             print("saved to %s" % save_path)
 
