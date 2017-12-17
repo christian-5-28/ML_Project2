@@ -1,11 +1,7 @@
 import pandas as pd
-import numpy as np
-import re
 import datetime
 import numpy as np
 import re
-from random import randint
-import tensorflow as tf
 import keras
 from keras.models import Model, Input, Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Embedding, Dropout, Conv1D, MaxPooling1D, Activation, \
@@ -235,29 +231,33 @@ def clean_sentences(string):
     return re.sub(strip_special_chars, "", string.lower())
 
 
+def conv_different_kernels(num_filters, kernel_sizes, max_sentence_length, input_dim):
+    """
+    creates a convolutional layer with filters using different
+    kernel sizes (window of words selected in order to compute
+    a new feature value). It uses the Keras functional API in order
+    to create the filters with different kernel size and then it
+    merges the blocks created
 
-def conv_different_kernels(num_filters, filters_shape, max_sentence_length, input_dim):
+    :param num_filters:
+    :param kernel_sizes: list of the values of the kernel sizes
+    :param max_sentence_length: length of the sentence
+    :param input_dim: dimension of the input
+    :return:
+    """
 
-    parallel_convolutional_layers = []
+    convolutional_layers = []
 
     input_ = Input(shape=input_dim)
 
-    for filter_shape in filters_shape:
-        #layer = Conv2D(filters=num_filters, kernel_size=(filter_shape, 128), padding='same', activation='relu')(input_)
-        layer = Conv1D(filters=num_filters, kernel_size=filter_shape, padding='same', activation='relu')(input_)
-        #
-        #layer = MaxPooling2D((1, 11), strides=(1, 1), padding='same')(layer)
-        #layer = MaxPooling2D((max_sentence_length - filter_shape + 1, 128), strides=(1, 1), padding='same')(layer)
-        layer = MaxPooling1D((max_sentence_length - filter_shape + 1), padding='same')(layer)
+    for kernel_size in kernel_sizes:
+        layer = Conv1D(filters=num_filters, kernel_size=kernel_size, padding='same', activation='relu')(input_)
 
-        parallel_convolutional_layers.append(layer)
+        layer = MaxPooling1D((max_sentence_length - kernel_size + 1), padding='same')(layer)
 
-    merged = keras.layers.concatenate(parallel_convolutional_layers, axis=1)
-    #merged = Flatten()(merged)
-    #out = Flatten()(merged)
+        convolutional_layers.append(layer)
 
-    #out = Dense(200, activation='relu')(merged)
-    #out = Dense(num_classes, activation='softmax')(out)
+    merged = keras.layers.concatenate(convolutional_layers, axis=1)
 
     model = Model(input_, outputs=merged)
     return model
@@ -341,6 +341,27 @@ def clean_sentences_eigil(string):
     return re.sub(strip_special_chars, "", string.lower())
 
 
+def smooth_graph(y_value_list, smooth_window):
+    """
+    utily used to smooth values in list for a plot. It creates
+    a new list with same size of y_value_list having in each
+    element the mean of the previous elements selected with the
+    smooth_window argument.
+    """
+
+    smoothed_list = []
+
+    for index, element in enumerate(y_value_list):
+
+        window = min(index, smooth_window)
+
+        temp_list = y_value_list[index - window : index + 1]
+
+        mean_value = np.mean(temp_list)
+
+        smoothed_list.append(mean_value)
+
+    return smoothed_list
 
 
 
