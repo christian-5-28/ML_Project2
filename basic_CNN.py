@@ -1,4 +1,4 @@
-from ML_Project2.helpers import *
+from helpers import *
 
 # loading the tweet datasets
 path_positive = "twitter-datasets/train_pos_full.txt"

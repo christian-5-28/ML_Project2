@@ -8,6 +8,9 @@ from keras import layers, preprocessing
 from keras import models as mods
 from helpers import *
 import io
+import matplotlib.pyplot as plt
+import datetime
+
 
 def combine_pos_neg():
     '''Combines the postive and negative files, maybe not needed in final version'''
@@ -26,19 +29,19 @@ def combine_pos_neg():
                     outfile.write(line)
     return
 
-
-def read_data(path_comb):
-    """Extract the first tweets enclosed as a list of words."""
-    all_files_total = []
-    with open(path_comb, "r") as f:
-        for line in f:
-            all_files_total.append(line)
-
-    vocabulary = list()
-    for line in all_files_total[:1000]:
-        cleaned_line = clean_sentences(line)  # Cleaning the sentence
-        vocabulary.extend(cleaned_line)  # Creating a list of all words in our tweets
-    return vocabulary
+# TODO: didn't find any usage - TO DELETE
+# def read_data(path_comb):
+#     """Extract the first tweets enclosed as a list of words."""
+#     all_files_total = []
+#     with open(path_comb, "r") as f:
+#         for line in f:
+#             all_files_total.append(line)
+#
+#     vocabulary = list()
+#     for line in all_files_total[:1000]:
+#         cleaned_line = clean_sentences(line)  # Cleaning the sentence
+#         vocabulary.extend(cleaned_line)  # Creating a list of all words in our tweets
+#     return vocabulary
 
 
 def convert_data_to_index(string_data, wv):
@@ -69,16 +72,19 @@ def get_sim(valid_word_idx, vocab_size):
 #             yield line
 #
 
-'''Iterator object that iterates through files in directory, picking every sentence from the file.
-This is why "combined_full.txt" should be placed in its own directory.'''
+
 class MySentences(object):
+    """
+    Iterator object that iterates through files in directory, picking every sentence from the file.
+    This is why "combined_full.txt" should be placed in its own directory.
+    """
     def __init__(self, dirname):
         self.dirname = dirname
 
     def __iter__(self):
         for fname in os.listdir(self.dirname):
             for line in io.open(os.path.join(self.dirname, fname), 'r', encoding="utf-8", errors="replace"):
-                yield clean_sentences_eigil(line)
+                yield clean_sentences(line)
 
 
 # Based on:
@@ -86,20 +92,17 @@ class MySentences(object):
 # http://adventuresinmachinelearning.com/gensim-word2vec-tutorial/
 # https://rare-technologies.com/word2vec-tutorial/
 # TODO: figure out subsampling, add del to clear mem.
-# TODO: CARRY OUT ON EVERYTHING INCLUDING TESTSET
 
 '''Loading senctences in a memory-friendly way, needs full path'''
-sentences = MySentences("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/test_tweets")  # a memory-friendly iterator
-# sentences = MyCorpus()
-vector_dim = 300  # dimensions of word vectors = 300
-
-
+sentences = MySentences("combined_tweets")  # a memory-friendly iterator
+# sentences = np.loadtxt('combined_tweets.txt')
 '''For logging the process'''
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 '''Gensim model computation, either load existing or compute from scratch'''
-# model = models.Word2Vec.load("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/gensim models/model3")
-model = models.word2vec.Word2Vec(sentences, sg=1, iter=10, min_count=10, size=300, workers=3, negative=5)
+vector_dim = 300  # dimensions of word vectors = 300
+# model = models.Word2Vec.load("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/gensim models/model_TEST")
+model = models.word2vec.Word2Vec(sentences, sg=1, iter=15, min_count=6, size=vector_dim, workers=4, negative=5)
 
 '''Generate word list from gensim model'''
 # Iterates through every word vector from the model, and extracts the corresponding word.
@@ -111,22 +114,20 @@ for i in range(len(model.wv.vocab)):
     if vector is None:
         print('none: ', model.wv.index2word[i])
     if vector is not None:
-        word_vecs[i] = vector  # add comma?
+        word_vecs[i] = vector
         dictionary.append(model.wv.index2word[i])
-        indices.append(i)
 
 # unknown word vector for unknown words, with the token UNK:
-word_vecs = np.vstack((word_vecs, np.random.rand(1, vector_dim)))
+word_vecs = np.vstack((word_vecs, [np.random.uniform(-1, 1) for elem in np.zeros(vector_dim)]))
 print(word_vecs.shape)
 dictionary.append('UNK')
-indices.append(len(indices)+1)
 
 
 '''Saving'''
 # saves the model
-# model.save("/Users/eyu/Google Drev/DTU/5_semester/ML/ML_Project2/gensim models/model3")
-np.savetxt('wordvecs.txt', word_vecs)
-np.savetxt('word_list_test.txt', dictionary, fmt="%s")
+model.save("model_sg_2")
+np.save('wordvecs_sg_2.npy', word_vecs)
+np.save('word_list_sg_2.npy', dictionary)
 
 
 '''Validation of the similiar words with Keras (for qualitative analysis)'''
@@ -152,20 +153,124 @@ similarity = layers.merge([embedded_a, embedded_b], mode='cos', dot_axes=2)
 validation_model = mods.Model(input=[valid_word, other_word], output=similarity)
 
 # now run the model and get the closest words to the valid examples
-for i in range(valid_size):
-    valid_word = model.wv.index2word[valid_examples[i]]
-    top_k = 8  # number of nearest neighbors
-    sim = get_sim(valid_examples[i], len(model.wv.vocab))
-    nearest = (-sim).argsort()[1:top_k + 1]
-    log_str = 'Nearest to %s:' % valid_word
-    for k in range(top_k):
-        close_word = model.wv.index2word[nearest[k]]
-        log_str = '%s %s,' % (log_str, close_word)
-    print(log_str)
+# for i in range(valid_size):
+#     valid_word = model.wv.index2word[valid_examples[i]]
+#     top_k = 8  # number of nearest neighbors
+#     sim = get_sim(valid_examples[i], len(model.wv.vocab))
+#     nearest = (-sim).argsort()[1:top_k + 1]
+#     log_str = 'Nearest to %s:' % valid_word
+#     for k in range(top_k):
+#         close_word = model.wv.index2word[nearest[k]]
+#         log_str = '%s %s,' % (log_str, close_word)
+#     print(log_str)
 
 
+del model, embedding_matrix
+
+'''CREATE IDS'''
+path_positive = "twitter-datasets/train_pos_full.txt"
+path_negative = "twitter-datasets/train_neg_full.txt"
+
+numWords = []
+positive_files_total = []
+negative_files_total = []
+with open(path_positive, "r") as f:
+    for line in f:
+        positive_files_total.append(line)
+        counter = len(line.split())
+        numWords.append(counter)
+
+print('Positive files finished')
+
+with open(path_negative, "r", encoding='utf-8') as f:
+    for line in f:
+        negative_files_total.append(line)
+        counter = len(line.split())
+        numWords.append(counter)
+print('Negative files finished')
+
+del path_positive, path_negative
+
+num_files_total = len(numWords)
+print('The total number of files is', num_files_total)
+print('The total number of words in the files is', sum(numWords))
+print('The average number of words in the files is', sum(numWords)/len(numWords))
+
+# Uncomment in order to see the distribution of the number of words in every tweet
+# plt.hist(numWords, 50)
+# plt.xlabel('Sequence Length')
+# plt.ylabel('Frequency')
+# plt.axis([0, 40, 0, 25000])
+# plt.show()
+
+# From plot and average, we can observe that 20 is a good choice as max sequence length
+max_seq_length = 20
 
 
+positive_files = positive_files_total
+negative_files = negative_files_total
+# num_files_mini = len(positive_files) + len(negative_files)
+total_files_length = len(positive_files) + len(negative_files)
+
+# TODO: Eigil I changed the create_ids_matrix function as the same lines of code that here below
+create_ids_matrix(positive_files, negative_files, max_seq_length, dictionary)
+
+# '''
+# Convert to an ids matrix
+# '''
+# ids = np.zeros((num_files_mini, max_seq_length), dtype='int32')
+# file_counter = 0
+# start_time = datetime.datetime.now()
+#
+# for line in positive_files:
+#     index_counter = 0
+#     split = clean_sentences_eigil(line)  # Cleaning the sentence
+#
+#     for word in split:
+#         try:
+#             ids[file_counter][index_counter] = dictionary.index(word)
+#         except ValueError:
+#             ids[file_counter][index_counter] = len(dictionary) - 1  # Vector for unknown positive vectors, not used otherwise
+#         index_counter = index_counter + 1
+#
+#         # If we have already seen maxSeqLength words, we break the loop of the words of a tweet
+#         if index_counter >= max_seq_length:
+#             break
+#
+#     if file_counter % 10000 == 0:
+#         print("Steps to end: " + str(total_files_length - file_counter))
+#         print('Time of execution: ', datetime.datetime.now() - start_time)
+#
+#     file_counter = file_counter + 1
+#
+# del positive_files
+#
+# for line in negative_files:
+#     index_counter = 0
+#     split = clean_sentences_eigil(line)
+#
+#     for word in split:
+#         try:
+#             ids[file_counter][index_counter] = dictionary.index(word)
+#         except ValueError:
+#             ids[file_counter][index_counter] = len(dictionary) - 1  # Vector for unknown negative vectors, not used otherwise
+#         index_counter = index_counter + 1
+#
+#         if index_counter >= max_seq_length:
+#             break
+#
+#     if file_counter % 10000 == 0:
+#         print("Steps to end: " + str(total_files_length - file_counter))
+#         print('Time of execution: ', datetime.datetime.now() - start_time)
+#     file_counter = file_counter + 1
+#
+#
+# np.save('ids_sg_2.npy', ids)
+
+ids = np.load('ids_sg_6.npy')
+print(ids.shape)
+
+# preliminary runs to compare
 # Nearest to u: shorty, yu, urs, shld, you, bak, ye, mayb,
 # Nearest to my: chem, charlie, ma, everrr, panda, your, mah, wittle,
 # Nearest to me: meh, mee, bak, cell, creep, steph, sean, us,
@@ -199,6 +304,29 @@ for i in range(valid_size):
 # Nearest to go: goto, went, qo, going, studyyy, playyy, come, goin,
 # Nearest to ,: kalyra, hy-gear, and, mils, te-co, sesmark, ., bigelow,
 # Nearest to <user>: rt, jeeze, !, herh, oook, laugh, evuls, awwn,
+
+# final_run_1:
+# 2017-12-12 22:38:52,854 : INFO : min_count=10 retains 59884 unique words (10% of original 557983, drops 498099)
+# 2017-12-12 23:49:30,418 : INFO : training on 578642355 raw words (424484104 effective words) took
+#                                  4235.0s, 100231 effective words/s
+
+# with special chars...
+# Nearest to laugh: lmao, haha, hahaha, lmfao, lmaooo, hahah, lool, lmaoo,
+# Nearest to now: nowww, already, sleepyyy, urggg, nooow, still, invisable, ineedsleep,
+# Nearest to a: another, refere, the, civ, canrbo, that, inve, ifrs,
+# Nearest to you: u, youu, oyu, youuu, yyou, yu, youxxx, i,
+# Nearest to did: didnt, do, does, dint, didint, dident, can, could,
+# Nearest to there: theres, here, unfortunatley, dere, ther, laaame, runni, sauga,
+# Nearest to just: jus, juss, jst, jut, juuust, jjust, defintely, but,
+# Nearest to as: potenci, pelle, potenc, potencie, expans, pell, potencies, poten,
+# Nearest to do: dont, did, does, d'ya, dnt, nonononono, awnser, suure,
+# Nearest to ": 0.030, odx, 0.093, 0.562, 0.047, 0.187, 12.75, 0.029,
+# Nearest to going: goin, gonna, gunna, coming, gona, supposed, heading, went,
+# Nearest to please: pleaseee, pleasee, pleeease, pls, pleeasee, plz, plese, pleaaase,
+# Nearest to with: wit, w, wi, wif, wid, yp-u, ryq, evu,
+# Nearest to am: im, iam, extreamly, i, malarky, was, i'am, immm,
+# Nearest to back: bck, bak, backk, backkk, bacl, bacck, bacc, bac,
+# Nearest to at: @, 3:30-, concessions, atchu, niu, 6.40, cooped, canuseway,
 
 
 # TODO: DELETE MESS BELOW, NOT USED

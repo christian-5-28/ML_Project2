@@ -21,7 +21,7 @@ with open(path_negative, "r", encoding='utf-8') as f:
         counter = len(line.split())
         numWords.append(counter)
 
-words_list = create_word_list2(positive_files_total)
+words_list = create_word_list(positive_files_total)
 wordsList = np.save('words_list_test.npy', words_list)
 # wordsList = np.load('words_list_15.npy')
 

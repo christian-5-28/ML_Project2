@@ -1,6 +1,6 @@
 from keras.models import model_from_json
 import numpy as np
-from ML_Project2.helpers import *
+from helpers import *
 
 model_path = 'basic_cnn_model.json'
 weights_path = "basic_cnn_weights.h5"
