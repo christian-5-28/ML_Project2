@@ -8,30 +8,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class History(keras.callbacks.Callback):
-    def on_train_begin(self, logs={}):
-        self.losses = []
-        self.accuracy = []
-        self.epocs_losses = []
-        self.epocs_acc = []
-        self.epocs_val_loss = []
-        self.epocs_val_acc = []
-
-    def on_epoch_begin(self, epoch, logs={}):
-        self.losses = []
-        self.accuracy = []
-
-    def on_batch_end(self, batch, logs={}):
-        self.losses.append(logs.get('loss'))
-        self.accuracy.append(logs.get('acc'))
-
-    def on_epoch_end(self, epoch, logs={}):
-        self.epocs_losses.append(self.losses)
-        self.epocs_acc.append(self.accuracy)
-        self.epocs_val_loss.append(logs.get('val_loss'))
-        self.epocs_val_acc.append(logs.get('val_acc'))
-
-
 wordVectors = np.load('skipgrams/wordvecs_sg_6.npy')
 
 wordsList = np.load('skipgrams/word_list_sg_6.npy')
@@ -115,23 +91,35 @@ with open("crnn5_model.json", "w") as json_file:
 model.save_weights("crnn5_weights.h5")
 print("Saved model to disk")
 
-print(history.epocs_val_acc)
-print(len(history.epocs_val_acc))
-print(history.epocs_val_loss)
-print(len(history.epocs_val_loss))
+
+# From here, we save our metrics results for the comparison with plots
+smoothed_accuracy = smooth_graph(history.accuracy, 100)
+np.save("smoothed_acc_CRNN.npy", smoothed_accuracy)
+
+smoothed_losses = smooth_graph(history.losses, 100)
+np.save("smoothed_loss_CRNN.npy", smoothed_losses)
 
 fig = plt.figure(1)
-plt.plot(history.accuracy)
+plt.plot(smoothed_accuracy)
+
+fig.suptitle('train accuracy', fontsize=20)
+plt.xlabel('number of batches', fontsize=18)
+plt.ylabel('accuracy', fontsize=16)
+
 plt.show()
 fig.savefig('crnn_accuracy.png')
 plt.close()
 
 fig = plt.figure(2)
-plt.plot(history.losses)
+
+plt.plot(smoothed_losses)
+
+fig.suptitle('train loss', fontsize=20)
+plt.xlabel('number of batches', fontsize=18)
+plt.ylabel('loss', fontsize=16)
 plt.show()
 fig.savefig('crnn_losses.png')
 plt.close()
-
 # accuracy
 # [0.8422999982833862, 0.84824799892902369, 0.84934399983882902, 0.85181999943256381, 0.85254799904823308]
 

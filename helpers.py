@@ -177,29 +177,37 @@ def split_data_tf(x, ratio, seed=1):
     y_te = y[index_te]
     return x_tr, x_te, y_tr, y_te
 
+def conv_different_kernels(num_filters, kernel_sizes, max_sentence_length, input_dim):
+    """
+    creates a convolutional layer with filters using different
+    kernel sizes (window of words selected in order to compute
+    a new feature value). It uses the Keras functional API in order
+    to create the filters with different kernel size and then it
+    merges the blocks created
 
-def conv_different_kernels(num_filters, filters_shape, max_sentence_length, input_dim):
+    :param num_filters:
+    :param kernel_sizes: list of the values of the kernel sizes
+    :param max_sentence_length: length of the sentence
+    :param input_dim: dimension of the input
+    :return:
+    """
 
-    parallel_convolutional_layers = []
+    convolutional_layers = []
 
     input_ = Input(shape=input_dim)
 
-    for filter_shape in filters_shape:
-        #layer = Conv2D(filters=num_filters, kernel_size=(filter_shape, 128), padding='same', activation='relu')(input_)
-        layer = Conv1D(filters=num_filters, kernel_size=filter_shape, padding='same', activation='relu')(input_)
-        #
-        #layer = MaxPooling2D((1, 11), strides=(1, 1), padding='same')(layer)
-        #layer = MaxPooling2D((max_sentence_length - filter_shape + 1, 128), strides=(1, 1), padding='same')(layer)
-        layer = MaxPooling1D((max_sentence_length - filter_shape + 1), padding='same')(layer)
+    for kernel_size in kernel_sizes:
+        layer = Conv1D(filters=num_filters, kernel_size=kernel_size, padding='same', activation='relu')(input_)
 
-        parallel_convolutional_layers.append(layer)
+        layer = MaxPooling1D((max_sentence_length - kernel_size + 1), padding='same')(layer)
 
-    merged = keras.layers.concatenate(parallel_convolutional_layers, axis=1)
-    #merged = Flatten()(merged)
-    #out = Flatten()(merged)
+        convolutional_layers.append(layer)
 
-    #out = Dense(200, activation='relu')(merged)
-    #out = Dense(num_classes, activation='softmax')(out)
+    if len(convolutional_layers) > 1:
+        merged = keras.layers.concatenate(convolutional_layers, axis=1)
+
+    else:
+        merged = convolutional_layers[0]
 
     model = Model(input_, outputs=merged)
     return model
@@ -338,4 +346,25 @@ def tokenize(s):
     return tokens_re.findall(s)
 
 
+class History(keras.callbacks.Callback):
+    def on_train_begin(self, logs={}):
+        self.losses = []
+        self.accuracy = []
+        self.epocs_losses = []
+        self.epocs_acc = []
+        self.epocs_val_loss = []
+        self.epocs_val_acc = []
 
+    #def on_epoch_begin(self, epoch, logs={}):
+#        self.losses = []
+#       self.accuracy = []
+
+    def on_batch_end(self, batch, logs={}):
+        self.losses.append(logs.get('loss'))
+        self.accuracy.append(logs.get('acc'))
+
+    def on_epoch_end(self, epoch, logs={}):
+        # self.epocs_losses.append(self.losses)
+        # self.epocs_acc.append(self.accuracy)
+        self.epocs_val_loss.append(logs.get('val_loss'))
+        self.epocs_val_acc.append(logs.get('val_acc'))
