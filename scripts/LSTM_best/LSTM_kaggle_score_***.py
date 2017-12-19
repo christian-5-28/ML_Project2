@@ -9,8 +9,8 @@ import datetime
 '''
 Loading the files
 '''
-path_positive = "twitter-datasets/train_pos_full.txt"
-path_negative = "twitter-datasets/train_neg_full.txt"
+path_positive = "../../twitter-datasets/train_pos_full.txt"
+path_negative = "../../twitter-datasets/train_neg_full.txt"
 
 numWords = []
 positive_files_total = []
@@ -34,9 +34,9 @@ print('Negative files finished')
 Loading pre-trained wordvectors and wordsList
 '''
 
-wordVectors = np.load('skipgrams/wordvecs_sg_6.npy')
+wordVectors = np.load('../../skipgrams/wordvecs_sg_6.npy')
 
-wordsList = np.load('skipgrams/word_list_sg_6.npy')
+wordsList = np.load('../../skipgrams/word_list_sg_6.npy')
 wordsList = wordsList.tolist()  # Originally loaded as numpy array
 
 positive_files = positive_files_total
@@ -47,7 +47,7 @@ total_length = len(positive_files) + len(negative_files)
 Now, let's convert to an ids matrix
 '''
 # ids = create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
-ids = np.load('skipgrams/ids_sg_6.npy')
+ids = np.load('../../skipgrams/ids_sg_6.npy')
 max_seq_length = ids.shape[1]
 
 '''
@@ -159,14 +159,14 @@ Visualizing the process
 tf.summary.scalar('Loss', loss)
 tf.summary.scalar('Accuracy', accuracy)
 merged = tf.summary.merge_all()
-logdir = "tensorboard_last/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + "/"
+logdir = "tensorboard/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + "/"
 
 
 '''
 TRAINING
 
 While the following code is running, use your terminal to enter the directory that contains this notebook, enter 
-tensorboard --logdir=tensorboard, and visit http://localhost:6006/ with a browser to keep an eye on your training progress.
+tensorboard --logdir=scripts/LSTM_best/tensorboard, and visit http://localhost:6006/ with a browser to keep an eye on your training progress.
 
 '''
 
@@ -206,8 +206,8 @@ for epoch in range(0, epochs):
         index = i - (len(x_tr)-batch_size) * epoch
 
         if i/batch_size % 500 == 0:
-            print('Iteration number: ', i/batch_size)
-            print('Step to the end: ', (len(x_tr) - i)/batch_size)
+            print('Iteration number: ', i/batch_size * (epoch+1))
+            print('Step to the end: ', (len(x_tr) - i*(epoch+1))/batch_size)
 
         # Next Batch of reviews
         nextBatch = x_tr[index:index+batch_size]
@@ -223,7 +223,7 @@ for epoch in range(0, epochs):
 
         # Save the network every 10,000 training iterations
         if i % 10000 == 0 and i != 0:
-            save_path = saver.save(sess, "models_new/pretrained_lstm.ckpt", global_step=i)
+            save_path = saver.save(sess, "models/pretrained_lstm.ckpt", global_step=i)
             print("saved to %s" % save_path)
 
         final_save = i
@@ -264,6 +264,6 @@ for epoch in range(0, epochs):
     acc = sum(accuracy)/len(accuracy)
     print("Accuracy: ", acc)
 
-save_path = saver.save(sess, "models_new/pretrained_lstm.ckpt", global_step=final_save)
+save_path = saver.save(sess, "models/pretrained_lstm.ckpt", global_step=final_save)
 print("saved to %s" % save_path)
 writer.close()

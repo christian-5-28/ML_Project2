@@ -28,7 +28,7 @@ def smooth_graph(y_value_list, smooth_window):
 
 def create_word_list(documents, filter):
     '''
-    Create word list of unique words which occurrencies are
+    Create word list of unique words which occurrences are higher than filter
     '''
     word_dict = {}
     i = 0
