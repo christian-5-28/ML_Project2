@@ -1,7 +1,7 @@
 """
 LSTM_kaggle_score_0.85620.py: This script trains a LSTM architecture and then produces a
 csv file prediction on the test set. Tested on macOs machine, with running time of
-
+90 minutes per epoch
 """
 
 __author__    = "Christian Sciuto, Eigil Lippert and Lorenzo Tarantino"
