@@ -1,4 +1,4 @@
-# EPFL Machine Learning Course CS-433, Fall 2017, first project
+# EPFL Machine Learning Course CS-433, Fall 2017, second project "Text Classification"
 
 ## Description
 
@@ -58,14 +58,14 @@ At the same level of the 'scripts' directory we have the following files:
 
 ## Running the scripts
 
-1. In order to obtain the .csv file for the best score that we had on Kaggle, you have to run the script "run.py" in the folder with relative path "scripts/best_score_two_kernels_CNN_LSTM". When this script was run, a windows machine was used (tensorFlow for windows comes compiled in a non-optimized version for the latest CPU) so the running time of all process was nearly 20 hours. If you have GPU version of tensorFlow you can reduce running time drastically. However, if you do not want to spent so much time, you can modify the value of the variable "trainable" to False (by default is True) at the line 41. With this change you will obtain our second highest score (85.48%) with a running time of 2 hours and a half on a windows machine and CPU version of tensorFlow. The .csv file will be at the same level of the 'run.py' script.
+1. In order to obtain the .csv file for the best score that we had on Kaggle, you have to run the script "run.py" in the folder with relative path "scripts/best_score_two_kernels_CNN_LSTM". When this script was run, a windows machine was used (tensorFlow for windows comes compiled in a non-optimized version for the latest CPUs) so the running time of all process was nearly 20 hours. If you have GPU version of tensorFlow you can reduce running time drastically. However, if you do not want to spent so much time, you can modify the value of the variable "trainable" to False (by default is True) at the line 41. With this change you will obtain our second highest score (85.48%) with a running time of 2 hours and a half on a windows machine and CPU version of tensorFlow. The .csv file will be at the same level of the 'run.py' script.
 
 2. If you want to try the architecture with one kernel size CNN_LSTM, run the 'kaggle_score_0.8526_one_kernel_CNN_LSTM.py' in the folder 'scripts/one_kernel_CNN_LSTM_best_score'. At the end you will find the .csv file at the same level of the script.
 
 
 3. In order to try the LSTM architecture, run the 'LSTM_kaggle_score_0.85620.py' script in the folder 'scripts/LSTM_best'. After you run it, you have to run the 'make_submission_tf.script' (you can find it at the same level of the 'scritps' folder), this script will create a .csv file for the submission.
 
-4. If you want to test the the pre-processing part where we create the word vectors and the ids matrix for train and test data, run the 'skipgram_gensim.py' script(you need to have gensim installed for this task).
+4. If you want to test the the pre-processing part where we create the word vectors and the ids matrix for train and test data, run the 'skipgram_gensim.py' script (you need to have gensim installed for this task).
 
 5. if you do not want to rebuild all the models for the different architectures, in the 'data' folder you can find the json files of the models and the weights of the model for the different scores. In order to reproduce the .csv file, just create a short python script where you call the 'make_submission' method from our 'helpers' file. Be sure to pass the right argument to the method (the only thing that you have to do is just call the 'make_submission' method). Here it is a code example for the prediction script:
 
