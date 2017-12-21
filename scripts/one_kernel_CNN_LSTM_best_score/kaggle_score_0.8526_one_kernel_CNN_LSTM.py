@@ -106,6 +106,7 @@ print("Saved model to disk")
 # creating the prediction on test set csv file
 keras_prediction(model_path="one_kernel_CNN_LSTM_model.json",
                  weights_path="one_kernel_CNN_LSTM_weights.h5",
+                 ids_test_path="../../data/our_trained_wordvectors/ids_test_sg_6.npy",
                  csv_file_name="one_kernel_cnn_lstm_prediction.csv")
 
 # From here, we save our metrics results for the comparison with plots

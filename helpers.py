@@ -177,7 +177,7 @@ def create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
 
 # UTILITY FOR CREATING THE KAGGLE SUBMISSION
 
-def keras_prediction(model_path, weights_path, csv_file_name):
+def keras_prediction(model_path, weights_path, ids_test_path, csv_file_name):
     # load json and create model
     json_file = open(model_path, 'r')
     loaded_model_json = json_file.read()
@@ -189,7 +189,7 @@ def keras_prediction(model_path, weights_path, csv_file_name):
 
     loaded_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-    ids_test = np.load('data/our_trained_wordvectors/ids_test_sg_6.npy')
+    ids_test = np.load(ids_test_path)
 
     prediction = loaded_model.predict(ids_test, verbose=0)
 

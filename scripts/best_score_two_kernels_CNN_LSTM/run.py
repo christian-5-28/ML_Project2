@@ -70,7 +70,7 @@ model = Sequential()
 
 # First layer, embedding with the pre-trained word vectors, we train on these parameters
 model.add(Embedding(max_features, embedding_size, input_length=max_seq_length, weights=[wordVectors],
-                    trainable=True))
+                    trainable=trainable))
 
 # Prevent overfitting
 model.add(Dropout(dropout))
@@ -111,6 +111,7 @@ print(x_train.shape)
 history = History()
 
 # fitting the model with our train sets
+
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
@@ -132,7 +133,10 @@ model.save_weights("run_weights.h5")
 print("Saved model to disk")
 
 # creating the prediction on test set csv file
-keras_prediction(model_path="run_model.json", weights_path="run_weights.h5", csv_file_name="run_prediction.csv")
+keras_prediction(model_path="run_model.json",
+                 weights_path="run_weights.h5",
+                 ids_test_path="../../data/our_trained_wordvectors/ids_test_sg_6.npy",
+                 csv_file_name="run_prediction.csv")
 
 # saving the validation accuracy for each epoch
 val_acc_epochs = history.epocs_val_acc
