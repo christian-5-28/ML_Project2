@@ -1,3 +1,6 @@
+from keras import Sequential
+from keras.layers import Embedding, Dropout, LSTM, Dense
+
 from helpers import *
 
 # loading our wordVectors

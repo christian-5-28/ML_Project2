@@ -3,6 +3,9 @@ Train a recurrent convolutional network.
 Layers: embedding, Conv1D, LSTM
 Final score on Kaggle: 0.8526
 '''
+from keras import Sequential
+from keras.layers import Embedding, Dropout, LSTM, Dense, Activation
+
 from helpers import *
 import numpy as np
 
