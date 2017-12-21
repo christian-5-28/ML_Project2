@@ -1,3 +1,13 @@
+"""
+This script uses the skip-gram architecture of the gensim library to compute
+the word embeddings based based on the entire data set. It takes one file,
+consisting of all the sentences that need to be processed and creates a word list
+with corresponding word vectors. Finally it saves the word list and the word embedding
+and in the final part it computes the ids matrix for every sentence in the data set
+which can then be used as input for neural networks.
+"""
+
+
 from gensim import corpora, models, similarities
 
 import os
