@@ -16,7 +16,7 @@ First of all, make sure you have installed:
 
 4. Gensim. (Gensim is needed only if you want to reproduce our code for the preprocessing in the script "skipgram_gensim.py"), here you have a link for [installation](https://radimrehurek.com/gensim/install.html)
 
-After this, be sure to download the directory "data" from this [link on switch drive](https://drive.switch.ch/index.php/s/FvBb3jbLUNBN1Bl). Copy the downloaded directory at the same level of this readMe file!
+After this, be sure to download the directory "data" from this [link on switch drive](https://drive.switch.ch/index.php/s/FvBb3jbLUNBN1Bl). When you open this link, click the download button at on the right of the top of the page. Copy the downloaded directory at the same level of this readMe file!
 
 ### Description of "data" Directory
 
