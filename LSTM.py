@@ -1,49 +1,10 @@
-import numpy as np
-import re
-from random import randint
+"""
+LSTM network
+"""
+
 import tensorflow as tf
 from helpers import *
 import datetime
-import matplotlib.pyplot as plt
-
-# TODO: quote https://github.com/adeshpande3/LSTM-Sentiment-Analysis/blob/master/Oriole%20LSTM.ipynb
-
-
-def get_train_batch():
-    """
-    Returns a random batch from the train set and the corresponding labels
-    """
-    labels = []
-    arr = np.zeros([batch_size, max_seq_length])
-    for i in range(batch_size):
-        if (i % 2 == 0):
-            # num = randint(1, len(positive_files))
-            # Leaving 750*2 samples for testing
-            num = randint(1, len(positive_files))
-            labels.append([1, 0])
-        else:
-            # num = randint(len(positive_files)+1, len(positive_files)+len(negative_files))
-            # Leaving 750*2 samples for testing
-            num = randint(len(positive_files), len(positive_files)+len(negative_files))
-            labels.append([0, 1])
-        arr[i] = ids[num-1:num]
-    return arr, labels
-
-
-def get_test_batch():
-    """
-    Returns a random batch from the test set and the corresponding labels
-    """
-    labels = []
-    arr = np.zeros([batch_size, max_seq_length])
-    for i in range(batch_size):
-        num = randint(len(positive_files) - 750, len(positive_files) + 750)
-        if num <= len(positive_files):
-            labels.append([1, 0])
-        else:
-            labels.append([0, 1])
-        arr[i] = ids[num-1:num]
-    return arr, labels
 
 '''
 Loading the files
@@ -69,13 +30,6 @@ with open(path_negative, "r", encoding='utf-8') as f:
         numWords.append(counter)
 print('Negative files finished')
 
-
-# plt.hist(numWords, 50)
-# plt.xlabel('Sequence Length')
-# plt.ylabel('Frequency')
-# plt.axis([0, 40, 0, 25000])
-# plt.show()
-
 '''
 Loading pre-trained wordvectors and wordsList
 '''
@@ -93,7 +47,6 @@ total_length = len(positive_files) + len(negative_files)
 Now, let's convert to an ids matrix
 '''
 # ids = create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
-
 ids = np.load('skipgrams/ids_sg_6.npy')
 max_seq_length = ids.shape[1]
 
@@ -120,7 +73,7 @@ Integerized Inputs - MAX SEQUENCE LENGTH (input_data)                       Labe
 batch_size = 100
 lstm_units = 128
 num_classes = 2
-epochs = 2
+epochs = 4
 # Dimensions for each word vector
 num_dimensions = wordVectors.shape[1]
 
@@ -154,10 +107,10 @@ the RNN graph.
 
 lstmCell = tf.nn.rnn_cell.BasicLSTMCell(lstm_units)
 # We’ll then wrap that LSTM cell in a dropout layer to help prevent the network from overfitting
-lstmCell = tf.nn.rnn_cell.DropoutWrapper(cell=lstmCell, output_keep_prob=0.9)
+lstmCell = tf.nn.rnn_cell.DropoutWrapper(cell=lstmCell, output_keep_prob=0.85)
 
 # Creates a recurrent neural network specified by RNNCell cell. data is the input
-# (outputs) value contains the output of the RNN cell at every time instant. - https://stackoverflow.com/questions/44162432/analysis-of-the-output-from-tf-nn-dynamic-rnn-tensorflow-function
+# (outputs) value contains the output of the RNN cell at every time instant.
 # _ it's the final state
 value, _ = tf.nn.dynamic_rnn(lstmCell, data, dtype=tf.float64)
 
@@ -206,39 +159,59 @@ Visualizing the process
 tf.summary.scalar('Loss', loss)
 tf.summary.scalar('Accuracy', accuracy)
 merged = tf.summary.merge_all()
-logdir = "tensorboard_new/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + "/"
+logdir = "tensorboard_last/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + "/"
 
 
 '''
-TRAINING - RIGUARDARE
+TRAINING
 
 While the following code is running, use your terminal to enter the directory that contains this notebook, enter 
 tensorboard --logdir=tensorboard, and visit http://localhost:6006/ with a browser to keep an eye on your training progress.
 
 '''
 
-# IT TAKES 90 MINUTES PER EPOCH
+# IT TAKES 100 MINUTES PER EPOCH
 
+# NEW SESSION
 sess = tf.InteractiveSession()
 writer = tf.summary.FileWriter(logdir, sess.graph)
 saver = tf.train.Saver()
 sess.run(tf.global_variables_initializer())
 
-for epoch in range(epochs):
+# RESTORE SESSION
+# sess = tf.InteractiveSession()
+# writer = tf.summary.FileWriter(logdir, sess.graph)
+# saver = tf.train.Saver()
+# saver.restore(sess, tf.train.latest_checkpoint('models_last'))
+
+
+for epoch in range(0, epochs):
+
+    # Uncomment only if you want to see different epochs in different colors on tensorBoard
+
+    # if epoch > 1:
+    #     save_path = saver.save(sess, "models_new/pretrained_lstm.ckpt", global_step=final_save)
+    #     print("saved to %s" % save_path)
+    #     writer.close()
+    #     sess.close()
+    #     sess = tf.InteractiveSession()
+    #     writer = tf.summary.FileWriter(logdir, sess.graph)
+    #     saver = tf.train.Saver()
+    #     saver.restore(sess, tf.train.latest_checkpoint('models_new'))
 
     x_tr, x_te, y_tr, y_te = split_data_tf(ids, 0.9)
 
-    # for i in range(0, len(x_tr)-batch_size, batch_size):
-    for i in range(0, len(x_tr)-batch_size, batch_size):
+    for i in range((len(x_tr)-batch_size) * epoch, (len(x_tr)-batch_size)*(epoch+1), batch_size):
+
+        index = i - (len(x_tr)-batch_size) * epoch
 
         if i/batch_size % 500 == 0:
             print('Iteration number: ', i/batch_size)
             print('Step to the end: ', (len(x_tr) - i)/batch_size)
 
         # Next Batch of reviews
-        # nextBatch, nextBatchLabels = get_train_batch()
-        nextBatch = x_tr[i:i+batch_size]
-        nextBatchLabels = y_tr[i:i+batch_size]
+        nextBatch = x_tr[index:index+batch_size]
+        nextBatchLabels = y_tr[index:index+batch_size]
 
         sess.run(optimizer, {input_data: nextBatch, labels: nextBatchLabels})
 
@@ -249,17 +222,23 @@ for epoch in range(epochs):
             writer.flush()
 
         # Save the network every 10,000 training iterations
-        if i/batch_size % 100000 == 0 and i != 0:
+        if i % 10000 == 0 and i != 0:
             save_path = saver.save(sess, "models_new/pretrained_lstm.ckpt", global_step=i)
             print("saved to %s" % save_path)
 
+        final_save = i
+
+    # Calculating the accuracy on the test set
     predictions = []
-    for i in range(0, len(y_te)-batch_size, batch_size):
-        if i/batch_size % 10 == 0:
-            print('Iteration number: ', i/batch_size, ' tot_iter = ', len(y_te)/batch_size)
-        test_batch = x_te[i:i+batch_size]
+    for t in range(0, len(y_te), batch_size):
+        if t/batch_size % 10 == 0:
+            print('Iteration number: ', t/batch_size, ' tot_iter = ', len(y_te)/batch_size)
+        test_batch = x_te[t:t+batch_size]
         pred = sess.run([prediction], {input_data: test_batch})
-        predictions += pred
+        if t == 0:
+            predictions = pred[0]
+        else:
+            predictions = np.vstack((predictions, pred[0]))
 
     print("Epoch: ", epoch)
 
@@ -278,51 +257,13 @@ for epoch in range(epochs):
         else:
             test_labels.append(-1)
 
+    print(len(final_predictions))
+    print(len(test_labels))
+
     accuracy = np.array(final_predictions) == np.array(test_labels)
     acc = sum(accuracy)/len(accuracy)
     print("Accuracy: ", acc)
 
+save_path = saver.save(sess, "models_new/pretrained_lstm.ckpt", global_step=final_save)
+print("saved to %s" % save_path)
 writer.close()
-
-
-'''
-PREDICT
-'''
-# path_test = "twitter-datasets/test_data.txt"
-# test_files = []
-#
-# with open(path_test, "r") as f:
-#     for line in f:
-#         test_files.append(line)
-#
-# ids_test = np.zeros((len(test_files), max_seq_length), dtype='int32')
-# file_counter = 0
-# for line in test_files:
-#     index_counter = 0
-#     cleaned_line = clean_sentences(line)  # Cleaning the sentence
-#     split = cleaned_line.split()
-#
-#     for word in split:
-#         try:
-#             ids_test[file_counter][index_counter] = wordsList.index(word)
-#         except ValueError:
-#             ids_test[file_counter][index_counter] = 399999  # Vector for unkown words
-#         index_counter = index_counter + 1
-#
-#         # If we have already seen maxSeqLength words, we break the loop of the words of a tweet
-#         if index_counter >= max_seq_length:
-#             break
-#     file_counter = file_counter + 1
-#
-#     print("Steps to end (test): " + str(len(test_files) - file_counter))
-#
-#
-#
-# sess = tf.InteractiveSession()
-# saver = tf.train.Saver()
-# saver.restore(sess, tf.train.latest_checkpoint('models'))
-#
-# for i in range(0, len(test_files)):
-#     pred = sess.run([prediction], {input_data: test_batch})
-#
-# make_submission(pred)

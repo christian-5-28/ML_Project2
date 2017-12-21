@@ -1,9 +1,11 @@
+"""
+Run this script to get a prediction after having trained a model done with keras
+"""
 from keras.models import model_from_json
-import numpy as np
 from helpers import *
 
-model_path = 'basic_cnn_model.json'
-weights_path = "basic_cnn_weights.h5"
+model_path = 'scripts/CRNN_best/crnn5_model.json'
+weights_path = "scripts/CRNN_best/crnn5_weights.h5"
 
 # load json and create model
 json_file = open(model_path, 'r')
@@ -16,13 +18,16 @@ print("Loaded model from disk")
 
 loaded_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-ids_test = np.load('skipgrams/ids_test_sg_7.npy')
+ids_test = np.load('skipgrams/ids_test_sg_6.npy')
 
+fake_ids = []
+for i in range(len(ids_test)):
+    fake_ids.append(ids_test[i].tolist())
 
-prediction = loaded_model.predict(ids_test, verbose=0)
+prediction = loaded_model.predict(fake_ids, verbose=0)
 
 prediction[prediction >= 0.5] = 1
 prediction[prediction < 0.5] = -1
 prediction = prediction.reshape(-1)
 print(prediction)
-make_submission(prediction, 'Kaggle_prediction_10_bas_CNN.csv')
+make_submission(prediction, 'Crnn_5')
