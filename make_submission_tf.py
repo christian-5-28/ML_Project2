@@ -63,7 +63,7 @@ accuracy = tf.reduce_mean(tf.cast(correctPred, tf.float32))
 
 sess = tf.InteractiveSession()
 saver = tf.train.Saver()
-saver.restore(sess, tf.train.latest_checkpoint('scripts/LSTM_best/models'))
+saver.restore(sess, tf.train.latest_checkpoint('data/models'))
 
 predictions = []
 for i in range(0, len(test_files), batch_size):

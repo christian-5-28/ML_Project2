@@ -180,7 +180,7 @@ for epoch in range(0, epochs):
             print('Iteration number: ', i/batch_size * (epoch+1))
             print('Step to the end: ', (len(x_tr) - i*(epoch+1))/batch_size)
 
-        # Next Batch of reviews
+        # Next Batch of tweets
         nextBatch = x_tr[index:index+batch_size]
         nextBatchLabels = y_tr[index:index+batch_size]
 
@@ -194,7 +194,7 @@ for epoch in range(0, epochs):
 
         # Save the network every 10,000 training iterations
         if i % 10000 == 0 and i != 0:
-            save_path = saver.save(sess, "models/pretrained_lstm.ckpt", global_step=i)
+            save_path = saver.save(sess, "../../data/models/pretrained_lstm.ckpt", global_step=i)
             print("saved to %s" % save_path)
 
         final_save = i
@@ -235,6 +235,6 @@ for epoch in range(0, epochs):
     acc = sum(accuracy)/len(accuracy)
     print("Accuracy: ", acc)
 
-save_path = saver.save(sess, "models/pretrained_lstm.ckpt", global_step=final_save)
+save_path = saver.save(sess, "../../data/models/pretrained_lstm.ckpt", global_step=final_save)
 print("saved to %s" % save_path)
 writer.close()
