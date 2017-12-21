@@ -1,20 +1,12 @@
 from helpers import *
-import matplotlib.pyplot as plt
 
-
-# loading our dictionary
-wordsList = np.load('skipgrams/word_list_sg_7.npy')
-print('Loaded the word list!')
-wordsList = wordsList.tolist()  # Originally loaded as numpy array
-# wordsList = [word.decode('UTF-8') for word in wordsList]  # Encode words as UTF-8
 
 # loading our wordVectors
-wordVectors = np.load('skipgrams/wordvecs_sg_7.npy')
-
+wordVectors = np.load('skipgrams/wordvecs_sg_6.npy')
 print('Loaded the word vectors!')
 
 # here we loaded our ids matrix
-ids = np.load('skipgrams/ids_sg_7.npy')
+ids = np.load('skipgrams/ids_sg_6.npy')
 
 # here we split the ids matrix in train and test sets
 x_train, x_test, y_train, y_test = split_data(ids, 0.9)
@@ -22,9 +14,9 @@ x_train, x_test, y_train, y_test = split_data(ids, 0.9)
 print('Build model...')
 
 # Here we define embedding parameters useful for the Embedding Layer
-max_features = 83782
+max_features = wordVectors.shape[0]
 max_seq_length = ids.shape[1]
-embedding_size = 300  # first time
+embedding_size = wordVectors.shape[1]
 
 
 # here we define the parameters for the convolutional Layer
@@ -68,25 +60,27 @@ model.add(Dropout(0.1))
 # Adding LSTM layer
 model.add(LSTM(lstm_output_size))
 
-# adding the dense layer
+# adding the dense layer for reshaping and evaluate the y-value
 model.add(Dense(1, activation='sigmoid'))
 
-# defining the optimizers
+# defining the optimizers. We used the default values
+# as suggested on the Keras documentation, we explicitly reported
+# them for clarity.
 adam_optimizer = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
-# adadelta_optimizer = keras.optimizers.Adadelta()
-
+# compiling our model structure
 model.compile(loss='binary_crossentropy',
               optimizer=adam_optimizer,
               metrics=['accuracy'])
 
+# here we print the structure of our model
 model.summary()
 
 print('Train...')
 print(y_train.shape)
 print(x_train.shape)
 
-# defining our callback to create the plots (loss, accuracy)
+# defining our callback to save metrics in order to create the plots (loss, accuracy)
 history = History()
 
 # fitting the model with our data
@@ -110,35 +104,24 @@ with open("basic_cnn_model.json", "w") as json_file:
 model.save_weights("basic_cnn_weights.h5")
 print("Saved model to disk")
 
+# saving the validation accuracy for each epoch
+val_acc_epochs = history.epocs_val_acc
+np.save("val_acc_basic_CNN.npy", val_acc_epochs)
 
-# From here, we save our metrics results for the comparison with plots
+# saving the loss accuracy for each epoch
+val_loss_epochs = history.epocs_val_loss
+np.save("val_loss_basic_CNN.npy", val_loss_epochs)
+
+# here we use our utility function "smooth_graph"
+# in order to have smoothed metrics for the plot
 smoothed_accuracy = smooth_graph(history.accuracy, 100)
+
+# saving the smoothed metrics
 np.save("smoothed_acc_CNN_LSTM.npy", smoothed_accuracy)
 
+# same for the train loss metrics
 smoothed_losses = smooth_graph(history.losses, 100)
 np.save("smoothed_loss_CNN_LSTM.npy", smoothed_losses)
-
-fig = plt.figure(1)
-plt.plot(smoothed_accuracy)
-
-fig.suptitle('train accuracy', fontsize=20)
-plt.xlabel('number of batches', fontsize=18)
-plt.ylabel('accuracy', fontsize=16)
-
-plt.show()
-fig.savefig('cnn_lstm_accuracy.png')
-plt.close()
-
-fig = plt.figure(2)
-
-plt.plot(smoothed_losses)
-
-fig.suptitle('train loss', fontsize=20)
-plt.xlabel('number of batches', fontsize=18)
-plt.ylabel('loss', fontsize=16)
-plt.show()
-fig.savefig('cnn_lstm_losses.png')
-plt.close()
 
 
 
