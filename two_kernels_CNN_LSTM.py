@@ -1,12 +1,15 @@
+from keras import Sequential
+from keras.layers import Embedding, Dropout, LSTM, Dense
+
 from helpers import *
 
 
 # loading our wordVectors
-wordVectors = np.load('skipgrams/wordvecs_sg_6.npy')
+wordVectors = np.load('data/our_trained_wordvectors/wordvecs_sg_6.npy')
 print('Loaded the word vectors!')
 
 # here we loaded our ids matrix
-ids = np.load('skipgrams/ids_sg_6.npy')
+ids = np.load('data/our_trained_wordvectors/ids_sg_6.npy')
 
 # here we split the ids matrix in train and test sets
 x_train, x_test, y_train, y_test = split_data(ids, 0.9)
@@ -97,31 +100,31 @@ print('Test accuracy:', acc)
 
 # serialize model to JSON
 model_json = model.to_json()
-with open("basic_cnn_model.json", "w") as json_file:
+with open("two_kernels_cnn_lstm_model.json", "w") as json_file:
     json_file.write(model_json)
 
 # serialize weights to HDF5
-model.save_weights("basic_cnn_weights.h5")
+model.save_weights("two_kernels_cnn_lstm_weights.h5")
 print("Saved model to disk")
 
 # saving the validation accuracy for each epoch
 val_acc_epochs = history.epocs_val_acc
-np.save("val_acc_basic_CNN.npy", val_acc_epochs)
+np.save("val_acc_two_kernels_CNN_LSTM.npy", val_acc_epochs)
 
 # saving the loss accuracy for each epoch
 val_loss_epochs = history.epocs_val_loss
-np.save("val_loss_basic_CNN.npy", val_loss_epochs)
+np.save("val_loss_two_kernels_CNN_LSTM.npy", val_loss_epochs)
 
 # here we use our utility function "smooth_graph"
 # in order to have smoothed metrics for the plot
 smoothed_accuracy = smooth_graph(history.accuracy, 100)
 
 # saving the smoothed metrics
-np.save("smoothed_acc_CNN_LSTM.npy", smoothed_accuracy)
+np.save("smoothed_acc_two_kernels_CNN_LSTM.npy", smoothed_accuracy)
 
 # same for the train loss metrics
 smoothed_losses = smooth_graph(history.losses, 100)
-np.save("smoothed_loss_CNN_LSTM.npy", smoothed_losses)
+np.save("smoothed_loss_two_kernels_CNN_LSTM.npy", smoothed_losses)
 
 
 

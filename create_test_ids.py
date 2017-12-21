@@ -6,7 +6,7 @@ from helpers import *
 import datetime
 
 '''CREATE IDS'''
-path_test = "twitter-datasets/test_data.txt"
+path_test = "data/twitter-datasets/test_data.txt"
 test_files = []
 
 with open(path_test, "r") as f:
@@ -25,7 +25,7 @@ total_files_length = len(test_files)
 Convert to an ids matrix
 '''
 
-dictionary = np.load('skipgrams/word_list_sg_6.npy')
+dictionary = np.load('data/our_trained_wordvectors/word_list_sg_6.npy')
 dictionary = dictionary.tolist()
 
 ids = np.zeros((num_files_mini, max_seq_length), dtype='int32')
@@ -56,8 +56,8 @@ for line in test_files:
     file_counter = file_counter + 1
 
 
-np.save('skipgrams/ids_test_sg_6.npy', ids)
+np.save('data/our_trained_wordvectors/ids_test_sg_6.npy', ids)
 
-ids = np.load('skipgrams/ids_test_sg_6.npy')
+ids = np.load('data/our_trained_wordvectors/ids_test_sg_6.npy')
 print(ids[:4])
 print(ids.shape)

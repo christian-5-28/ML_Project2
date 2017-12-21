@@ -6,48 +6,17 @@ import tensorflow as tf
 from helpers import *
 import datetime
 
-'''
-Loading the files
-'''
-path_positive = "../../twitter-datasets/train_pos_full.txt"
-path_negative = "../../twitter-datasets/train_neg_full.txt"
-
-numWords = []
-positive_files_total = []
-negative_files_total = []
-with open(path_positive, "r") as f:
-    for line in f:
-        positive_files_total.append(line)
-        counter = len(line.split())
-        numWords.append(counter)
-
-print('Positive files finished')
-
-with open(path_negative, "r", encoding='utf-8') as f:
-    for line in f:
-        negative_files_total.append(line)
-        counter = len(line.split())
-        numWords.append(counter)
-print('Negative files finished')
 
 '''
 Loading pre-trained wordvectors and wordsList
 '''
 
-wordVectors = np.load('../../skipgrams/wordvecs_sg_6.npy')
-
-wordsList = np.load('../../skipgrams/word_list_sg_6.npy')
-wordsList = wordsList.tolist()  # Originally loaded as numpy array
-
-positive_files = positive_files_total
-negative_files = negative_files_total
-total_length = len(positive_files) + len(negative_files)
+wordVectors = np.load('../../data/our_trained_wordvectors/wordvecs_sg_6.npy')
 
 '''
-Now, let's convert to an ids matrix
+Now, let's load our ids matrix
 '''
-# ids = create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
-ids = np.load('../../skipgrams/ids_sg_6.npy')
+ids = np.load('../../data/our_trained_wordvectors/ids_sg_6.npy')
 max_seq_length = ids.shape[1]
 
 '''
@@ -70,10 +39,12 @@ Integerized Inputs - MAX SEQUENCE LENGTH (input_data)                       Labe
 .                                                                           .          | 
 [    13    333 222222   4342     12   5437      5  56456      0      0]     [1,0]     -| 
 '''
+
 batch_size = 100
 lstm_units = 128
 num_classes = 2
 epochs = 4
+
 # Dimensions for each word vector
 num_dimensions = wordVectors.shape[1]
 

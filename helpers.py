@@ -3,27 +3,94 @@ import datetime
 import numpy as np
 import re
 import keras
-from keras.models import Model, Input, Sequential
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Embedding, Dropout, Conv1D, MaxPooling1D, Activation, \
-    LSTM, BatchNormalization, Merge
-from keras.utils import plot_model
+from keras.models import Model, Input
+from keras.layers import Conv1D, MaxPooling1D
 
 
-def smooth_graph(y_value_list, smooth_window):
+# UTILITIES FOR SPLITTING THE DATA
 
-    smoothed_list = []
+def split_data(x, ratio, seed=1):
+    """split the dataset based on the split ratio."""
 
-    for index, element in enumerate(y_value_list):
+    y = np.array([1] * int(x.shape[0]/2))
+    y = np.append(y, np.array([0] * int(x.shape[0]/2)))
+    # set seed
+    np.random.seed(seed)
+    # generate random indices
+    num_row = x.shape[0]
+    indices = np.random.permutation(num_row)
+    index_split = int(np.floor(ratio * num_row))
+    index_tr = indices[: index_split]
+    index_te = indices[index_split:]
+    # create split
+    x_tr = x[index_tr]
+    x_te = x[index_te]
+    y_tr = y[index_tr]
+    y_te = y[index_te]
+    return x_tr, x_te, y_tr, y_te
 
-        window = min(index, smooth_window)
 
-        temp_list = y_value_list[index - window : index + 1]
+def split_data_tf(x, ratio, seed=1):
+    """split the dataset based on the split ratio."""
 
-        mean_value = np.mean(temp_list)
+    y = np.array([[1, 0]] * int(x.shape[0]/2))
+    y = np.concatenate((y, np.array([[0, 1]] * int(x.shape[0]/2))))
+    # set seed
+    np.random.seed(seed)
+    # generate random indices
+    num_row = x.shape[0]
+    indices = np.random.permutation(num_row)
+    index_split = int(np.floor(ratio * num_row))
+    index_tr = indices[: index_split]
+    index_te = indices[index_split:]
+    # create split
+    x_tr = x[index_tr]
+    x_te = x[index_te]
+    y_tr = y[index_tr]
+    y_te = y[index_te]
+    return x_tr, x_te, y_tr, y_te
 
-        smoothed_list.append(mean_value)
 
-    return smoothed_list
+# METHODS FOR THE PRE-PROCESSING OF OUR DATA
+
+def clean_sentences(string):
+    # Lower cases whole sentence, and then replaces the following
+
+    string = string.lower().replace("<br />", " ")
+    string = string.replace("n't", " not")
+    string = string.replace("'m", " am")
+    string = string.replace("'ll", " will")
+    string = string.replace("'d", " would")
+    string = string.replace("'ve", " have")
+    string = string.replace("'re", " are")
+    string = string.replace("'s", " is")
+    string = string.replace("#", "<hashhtagg> ")
+    string = string.replace("lol", "laugh")
+    string = string.replace("<3", "love")
+    string = string.replace("<user>", "")
+    string = string.replace("<url>", "")
+
+    strip_special_chars = re.compile("[^A-Za-z0-9 ]+")
+    string = re.sub(strip_special_chars, "", string.lower())
+
+    # Tokenizes string:
+    string = string.split()
+    # string = tokenize(string)
+
+    # Replaces numbers with the keyword <number>
+    # string = [re.sub(r'\d+[.]?[\d*]?$', '<number>', w) for w in string]
+
+    # Won't = will not, shan't = shall not, can't = can not
+    string = [w.replace("wo", "will") for w in string]
+    string = [w.replace("ca", "can") for w in string]
+    string = [w.replace("sha", "shall") for w in string]
+
+    # Any token which expresses laughter is replaced with "laugh"
+    # for i, word in enumerate(string):
+    #     if "haha" in word:
+    #         string[i] = word.replace(word, "laugh")
+
+    return string
 
 
 def create_word_list(documents, filter):
@@ -108,6 +175,7 @@ def create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
     np.save('ids_sg_6.npy', ids)
 
 
+# UTILITY FOR CREATING THE KAGGLE SUBMISSION
 def make_submission(pred, filename, from_tf=False):
 
     indices = np.arange(len(pred))
@@ -136,47 +204,7 @@ def make_submission(pred, filename, from_tf=False):
     df.to_csv(filename, index=False)
 
 
-def split_data(x, ratio, seed=1):
-    """split the dataset based on the split ratio."""
-
-    y = np.array([1] * int(x.shape[0]/2))
-    y = np.append(y, np.array([0] * int(x.shape[0]/2)))
-    # set seed
-    np.random.seed(seed)
-    # generate random indices
-    num_row = x.shape[0]
-    indices = np.random.permutation(num_row)
-    index_split = int(np.floor(ratio * num_row))
-    index_tr = indices[: index_split]
-    index_te = indices[index_split:]
-    # create split
-    x_tr = x[index_tr]
-    x_te = x[index_te]
-    y_tr = y[index_tr]
-    y_te = y[index_te]
-    return x_tr, x_te, y_tr, y_te
-
-
-def split_data_tf(x, ratio, seed=1):
-    """split the dataset based on the split ratio."""
-
-    y = np.array([[1, 0]] * int(x.shape[0]/2))
-    y = np.concatenate((y, np.array([[0, 1]] * int(x.shape[0]/2))))
-    # set seed
-    np.random.seed(seed)
-    # generate random indices
-    num_row = x.shape[0]
-    indices = np.random.permutation(num_row)
-    index_split = int(np.floor(ratio * num_row))
-    index_tr = indices[: index_split]
-    index_te = indices[index_split:]
-    # create split
-    x_tr = x[index_tr]
-    x_te = x[index_te]
-    y_tr = y[index_tr]
-    y_te = y[index_te]
-    return x_tr, x_te, y_tr, y_te
-
+# UTILITY METHOD FOR CREATION OF A CONVOLUTIONAL LAYER IN KERAS
 def conv_different_kernels(num_filters, kernel_sizes, max_sentence_length, input_dim):
     """
     creates a convolutional layer with filters using different
@@ -213,140 +241,15 @@ def conv_different_kernels(num_filters, kernel_sizes, max_sentence_length, input
     return model
 
 
-def add_convolutional_block(current_model, num_filters, kernel_size, max_sentence_length):
-
-    conv_layer = Conv1D(filters=num_filters, kernel_size=kernel_size, padding='same')
-    current_model.add(conv_layer)
-
-    current_model.add(BatchNormalization())
-
-    current_model.add(Activation('sigmoid'))
-
-    max_pool_layer = MaxPooling1D((max_sentence_length - kernel_size + 1), padding='same')
-
-    current_model.add(max_pool_layer)
-
-    return current_model
-
-
-def add_conv_block_filter_sizes(num_filters, max_sentence_length, filter_shapes, input_dim):
-
-    parallel_convolutional_layers = []
-
-    input_ = Input(shape=input_dim)
-
-    for filter_shape in filter_shapes:
-        layer = Conv1D(filters=num_filters, kernel_size=filter_shape, padding='same')(input_)
-
-        layer = BatchNormalization()(layer)
-
-        layer = Activation('sigmoid')(layer)
-
-        layer = MaxPooling1D((max_sentence_length - filter_shape + 1), padding='same')(layer)
-
-        parallel_convolutional_layers.append(layer)
-
-    merged = keras.layers.concatenate(parallel_convolutional_layers, axis=1)
-
-    model = Model(input_, outputs=merged)
-
-    return model
-
-
-def clean_sentences(string):
-    # Lowercases whole sentence, and then replaces the following
-    string = string.lower().replace("<br />", " ")
-    string = string.replace("n't", " not")
-    string = string.replace("'m", " am")
-    string = string.replace("'ll", " will")
-    string = string.replace("'d", " would")
-    string = string.replace("'ve", " have")
-    string = string.replace("'re", " are")
-    string = string.replace("'s", " is")
-    string = string.replace("#", "<hashhtagg> ")
-    string = string.replace("lol", "laugh")
-    string = string.replace("<3", "love")
-    string = string.replace("<user>", "")
-    string = string.replace("<url>", "")
-
-    strip_special_chars = re.compile("[^A-Za-z0-9 ]+")
-    string = re.sub(strip_special_chars, "", string.lower())
-
-    # Tokenizes string:
-    string = string.split()
-    # string = tokenize(string)
-
-
-    # Replaces numbers with the keyword <number>
-    # string = [re.sub(r'\d+[.]?[\d*]?$', '<number>', w) for w in string]
-
-    # Won't = will not, shan't = shall not, can't = can not
-    string = [w.replace("wo", "will") for w in string]
-    string = [w.replace("ca", "can") for w in string]
-    string = [w.replace("sha", "shall") for w in string]
-
-    # Any token which expresses laughter is replaced with "laugh"
-    # for i, word in enumerate(string):
-    #     if "haha" in word:
-    #         string[i] = word.replace(word, "laugh")
-
-    return string
-
-
-def remove_test_ids(path_test):
-    test_files_total = []
-    with open(path_test, "r") as f:
-        for line in f:
-            comma_index = line.index(',')
-            line = line[comma_index + 1:]
-            test_files_total.append(line)
-    return np.savetxt('test_files_no_ids.txt', test_files_total, fmt="%s")
-
-
-def combine_data():
-    '''Combines the postive and negative files, maybe not needed in final version'''
-    filenames = ['twitter-datasets/train_pos_full.txt', 'twitter-datasets/train_neg_full.txt', 'test_files_no_ids.txt']
-    filenames2 = ['twitter-datasets/train_pos.txt', 'twitter-datasets/train_neg.txt', 'test_files_no_ids.txt']
-    with open('twitter-datasets/combined_full.txt', 'w') as outfile:
-        for fname in filenames:
-            with open(fname) as infile:
-                for line in infile:
-                    outfile.write(line)
-
-    with open('twitter-datasets/combined.txt', 'w') as outfile:
-        for fname in filenames2:
-            with open(fname) as infile:
-                for line in infile:
-                    outfile.write(line)
-    return
-
-
-def tokenize(s):
-    '''Twitter customized tokenizer, NOT USED AT THE MOMENT'''
-    # Heart symbol
-    emoticons_str = r"""
-        (?:
-            [<] # heart top
-            [3] # heart bottom
-        )"""
-
-    regex_str = [
-        emoticons_str,
-        r'<[^>]+>',  # HTML tags
-        r'(?:@[\w_]+)',  # @-mentions
-        r"(?:\#+[\w_]+[\w\'_\-]*[\w_]+)",  # hash-tags
-        r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+',  # URLs
-
-        r'(?:(?:\d+,?)+(?:\.?\d+)?)',  # numbers
-        r"(?:[a-z][a-z'\-_]+[a-z])",  # words with - and '
-        r'(?:[\w_]+)',  # other words
-        r'(?:\S)'  # anything else
-    ]
-    tokens_re = re.compile(r'(' + '|'.join(regex_str) + ')', re.VERBOSE | re.IGNORECASE)
-    return tokens_re.findall(s)
-
-
+# CLASS AND METHODS TO SAVE METRICS FROM OUR MODELS
 class History(keras.callbacks.Callback):
+    """
+    we create a custom keras Callback in order to
+    save for each batch the train loss and the
+    train accuracy and for each epoch the validation
+    loss and the validation accuracy
+    """
+
     def on_train_begin(self, logs={}):
         self.losses = []
         self.accuracy = []
@@ -355,16 +258,28 @@ class History(keras.callbacks.Callback):
         self.epocs_val_loss = []
         self.epocs_val_acc = []
 
-    #def on_epoch_begin(self, epoch, logs={}):
-#        self.losses = []
-#       self.accuracy = []
 
     def on_batch_end(self, batch, logs={}):
         self.losses.append(logs.get('loss'))
         self.accuracy.append(logs.get('acc'))
 
     def on_epoch_end(self, epoch, logs={}):
-        # self.epocs_losses.append(self.losses)
-        # self.epocs_acc.append(self.accuracy)
         self.epocs_val_loss.append(logs.get('val_loss'))
         self.epocs_val_acc.append(logs.get('val_acc'))
+
+
+def smooth_graph(y_value_list, smooth_window):
+
+    smoothed_list = []
+
+    for index, element in enumerate(y_value_list):
+
+        window = min(index, smooth_window)
+
+        temp_list = y_value_list[index - window : index + 1]
+
+        mean_value = np.mean(temp_list)
+
+        smoothed_list.append(mean_value)
+
+    return smoothed_list

@@ -5,21 +5,18 @@ Run this script to get a prediction after having trained a model done with tenso
 from helpers import *
 import tensorflow as tf
 
-wordsList = np.load('skipgrams/word_list_sg_6.npy')
-print('Loaded the word list!')
-wordsList = wordsList.tolist()  # Originally loaded as numpy array
-# wordsList = [word.decode('UTF-8') for word in wordsList]  # Encode words as UTF-8
-wordVectors = np.load('skipgrams/wordvecs_sg_6.npy')
+
+wordVectors = np.load('data/our_trained_wordvectors/wordvecs_sg_6.npy')
 print('Loaded the word vectors!')
 
-path_test = "twitter-datasets/test_data.txt"
+path_test = "data/twitter-datasets/test_data.txt"
 test_files = []
 
 with open(path_test, "r") as f:
     for line in f:
         test_files.append(line)
 
-ids_test = np.load('skipgrams/ids_test_sg_6.npy')
+ids_test = np.load('data/our_trained_wordvectors/ids_test_sg_6.npy')
 
 
 batch_size = 100

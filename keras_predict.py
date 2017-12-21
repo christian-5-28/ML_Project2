@@ -4,8 +4,8 @@ Run this script to get a prediction after having trained a model done with keras
 from keras.models import model_from_json
 from helpers import *
 
-model_path = 'scripts/CRNN_best/crnn5_model.json'
-weights_path = "scripts/CRNN_best/crnn5_weights.h5"
+model_path = 'scripts/one_kernel_CNN_LSTM_best_score/crnn5_model.json'
+weights_path = "scripts/one_kernel_CNN_LSTM_best_score/crnn5_weights.h5"
 
 # load json and create model
 json_file = open(model_path, 'r')
@@ -18,7 +18,7 @@ print("Loaded model from disk")
 
 loaded_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-ids_test = np.load('skipgrams/ids_test_sg_6.npy')
+ids_test = np.load('data/our_trained_wordvectors/ids_test_sg_6.npy')
 
 fake_ids = []
 for i in range(len(ids_test)):
