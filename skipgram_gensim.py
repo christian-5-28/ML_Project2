@@ -7,6 +7,13 @@ and in the final part it computes the ids matrix for every sentence in the data 
 which can then be used as input for neural networks.
 """
 
+__author__    = "Christian Sciuto, Eigil Lippert and Lorenzo Tarantino"
+__copyright__ = "Copyright 2017, Second Machine Learning Project, EPFL Machine Learning Course CS-433, Fall 2017"
+__credits__   = ["Christian Sciuto", "Eigil Lippert", "Lorenzo Tarantino"]
+__license__   = "MIT"
+__version_    = "1.0.1"
+__status__    = "Project"
+
 
 from gensim import corpora, models, similarities
 

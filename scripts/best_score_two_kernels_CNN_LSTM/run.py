@@ -1,5 +1,5 @@
 """
-run.py: This script trains our architecture and then produces the same
+run.py: This script trains our two kernel-sized CNN_LSTM architecture and then produces the same
 csv file used on Kaggle. In our best score we let that the embedding layer
 could train the parameters of our word vectors. This process lasted 20 hours
 on a windows machine using only CPU (with tensorFlow non optimized for new
@@ -10,7 +10,7 @@ False and you will obtained our second highest score with this architecture
 """
 
 __author__    = "Christian Sciuto, Eigil Lippert and Lorenzo Tarantino"
-__copyright__ = "Copyright 2017, First Machine Learning Project, EPFL Machine Learning Course CS-433, Fall 2017"
+__copyright__ = "Copyright 2017, Second Machine Learning Project, EPFL Machine Learning Course CS-433, Fall 2017"
 __credits__   = ["Christian Sciuto", "Eigil Lippert", "Lorenzo Tarantino"]
 __license__   = "MIT"
 __version_    = "1.0.1"

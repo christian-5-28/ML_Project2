@@ -1,6 +1,15 @@
 """
-LSTM network
+LSTM_kaggle_score_0.85620.py: This script trains a LSTM architecture and then produces a
+csv file prediction on the test set. Tested on macOs machine, with running time of
+
 """
+
+__author__    = "Christian Sciuto, Eigil Lippert and Lorenzo Tarantino"
+__copyright__ = "Copyright 2017, Second Machine Learning Project, EPFL Machine Learning Course CS-433, Fall 2017"
+__credits__   = ["Christian Sciuto", "Eigil Lippert", "Lorenzo Tarantino"]
+__license__   = "MIT"
+__version_    = "1.0.1"
+__status__    = "Project"
 
 import tensorflow as tf
 from helpers import *

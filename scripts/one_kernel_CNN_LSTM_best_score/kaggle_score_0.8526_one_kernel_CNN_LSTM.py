@@ -1,8 +1,17 @@
-'''
-Train a recurrent convolutional network.
-Layers: embedding, Conv1D, LSTM
-Final score on Kaggle: 0.8526
-'''
+"""
+kaggle_score_0.8526_one_kernel_CNN_LSTM.py: this script creates a single-kernel-sized
+CNN_LSTM architecture that obtained a score on Kaggle of 0.8526. In this script
+we used our word vectors and ids matrix created in the pre-processing part.
+Tested on macOs machine with a computing time of 100 minutes.
+"""
+
+__author__    = "Christian Sciuto, Eigil Lippert and Lorenzo Tarantino"
+__copyright__ = "Copyright 2017, Second Machine Learning Project, EPFL Machine Learning Course CS-433, Fall 2017"
+__credits__   = ["Christian Sciuto", "Eigil Lippert", "Lorenzo Tarantino"]
+__license__   = "MIT"
+__version_    = "1.0.1"
+__status__    = "Project"
+
 from keras import Sequential
 from keras.layers import Embedding, Dropout, LSTM, Dense, Activation
 

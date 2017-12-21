@@ -1,6 +1,14 @@
 """
-Run this script to get a prediction after having trained a model done with tensorflow
+make_submission_tf.py: Run this script to get a prediction
+after having trained a model done with tensorflow
 """
+
+__author__    = "Christian Sciuto, Eigil Lippert and Lorenzo Tarantino"
+__copyright__ = "Copyright 2017, Second Machine Learning Project, EPFL Machine Learning Course CS-433, Fall 2017"
+__credits__   = ["Christian Sciuto", "Eigil Lippert", "Lorenzo Tarantino"]
+__license__   = "MIT"
+__version_    = "1.0.1"
+__status__    = "Project"
 
 from helpers import *
 import tensorflow as tf

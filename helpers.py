@@ -1,3 +1,17 @@
+"""
+helpers.py: This file contains all the utility methods
+that we created for our project. We have methods
+to load the data, methods useful for the pre-processing part,
+for building layers of our architectures and for the submission.
+"""
+
+__author__    = "Christian Sciuto, Eigil Lippert and Lorenzo Tarantino"
+__copyright__ = "Copyright 2017, Second Machine Learning Project, EPFL Machine Learning Course CS-433, Fall 2017"
+__credits__   = ["Christian Sciuto", "Eigil Lippert", "Lorenzo Tarantino"]
+__license__   = "MIT"
+__version_    = "1.0.1"
+__status__    = "Project"
+
 import pandas as pd
 import datetime
 import numpy as np
@@ -75,28 +89,19 @@ def clean_sentences(string):
 
     # Tokenizes string:
     string = string.split()
-    # string = tokenize(string)
 
-    # Replaces numbers with the keyword <number>
-    # string = [re.sub(r'\d+[.]?[\d*]?$', '<number>', w) for w in string]
-
-    # Won't = will not, shan't = shall not, can't = can not
     string = [w.replace("wo", "will") for w in string]
     string = [w.replace("ca", "can") for w in string]
     string = [w.replace("sha", "shall") for w in string]
-
-    # Any token which expresses laughter is replaced with "laugh"
-    # for i, word in enumerate(string):
-    #     if "haha" in word:
-    #         string[i] = word.replace(word, "laugh")
 
     return string
 
 
 def create_word_list(documents, filter):
-    '''
+    """
     Create word list of unique words which occurrences are higher than filter
-    '''
+    """
+
     word_dict = {}
     i = 0
     for document in documents:
@@ -120,9 +125,10 @@ def create_word_list(documents, filter):
 
 
 def create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList):
-    '''
+    """
     Convert to an ids matrix
-    '''
+    """
+
     total_files_length = len(positive_files) + len(negative_files)
     ids = np.zeros((total_files_length, max_seq_length), dtype='int32')
     file_counter = 0
@@ -178,17 +184,25 @@ def create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
 # UTILITY FOR CREATING THE KAGGLE SUBMISSION
 
 def keras_prediction(model_path, weights_path, ids_test_path, csv_file_name):
+    """
+    creates a csv file (csv_file_name) with prediction
+    on test data (ids_test_path) using a model
+    (model_path) with its weights (weights_path).
+    """
+
     # load json and create model
     json_file = open(model_path, 'r')
     loaded_model_json = json_file.read()
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
+
     # load weights into new model
     loaded_model.load_weights(weights_path)
     print("Loaded model from disk")
 
     loaded_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
+    # loading the ids matrix of the test set
     ids_test = np.load(ids_test_path)
 
     prediction = loaded_model.predict(ids_test, verbose=0)
@@ -201,9 +215,11 @@ def keras_prediction(model_path, weights_path, ids_test_path, csv_file_name):
 
 
 def make_submission(pred, filename, from_tf=False):
-
+    """
+    utily method to create a .csv file with the right
+    format for the Kaggle submission
+    """
     indices = np.arange(len(pred))
-    # df = pd.DataFrame(columns=['Id','Prediction'])
     df = pd.DataFrame()
 
     for elem, idx in zip(pred, indices):
@@ -293,7 +309,14 @@ class History(keras.callbacks.Callback):
 
 
 def smooth_graph(y_value_list, smooth_window):
+    """
+    utility that returns a list with the same size of 'y_value_list'
+    where each element is the mean of the previous "smooth_window" elements
 
+    :param y_value_list: list of value to be smoothed
+    :param smooth_window: number of elements to consider for computation of the mean
+    :return:
+    """
     smoothed_list = []
 
     for index, element in enumerate(y_value_list):
