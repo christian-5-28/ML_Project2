@@ -1,42 +1,12 @@
-from ML_Project2.helpers import *
-
-# loading the tweet datasets
-path_positive = "twitter-datasets/train_pos_full.txt"
-path_negative = "twitter-datasets/train_neg_full.txt"
-
-numWords = []
-positive_files_total = []
-negative_files_total = []
-with open(path_positive, "r") as f:
-    for line in f:
-        positive_files_total.append(line)
-        counter = len(line.split())
-        numWords.append(counter)
-
-with open(path_negative, "r", encoding='utf-8') as f:
-    for line in f:
-        negative_files_total.append(line)
-        counter = len(line.split())
-        numWords.append(counter)
-
-num_files_total = len(numWords)
-print('The total number of files is', num_files_total)
-print('The total number of words in the files is', sum(numWords))
-print('The average number of words in the files is', sum(numWords) / len(numWords))
-
-# loading our dictionary
-wordsList = np.load('skipgrams/word_list_sg_7.npy')
-print('Loaded the word list!')
-wordsList = wordsList.tolist()  # Originally loaded as numpy array
-# wordsList = [word.decode('UTF-8') for word in wordsList]  # Encode words as UTF-8
+from helpers import *
 
 # loading our wordVectors
-wordVectors = np.load('skipgrams/wordvecs_sg_7.npy')
+wordVectors = np.load('skipgrams/wordvecs_sg_6.npy')
 
 print('Loaded the word vectors!')
 
 # loading our ids matrix
-ids = np.load('skipgrams/ids_sg_7.npy')
+ids = np.load('skipgrams/ids_sg_6.npy')
 
 # splitting our data in train and test sets
 x_train, x_test, y_train, y_test = split_data(ids, 0.9)
@@ -44,13 +14,12 @@ x_train, x_test, y_train, y_test = split_data(ids, 0.9)
 print('Build model...')
 
 # Here we define embedding parameters useful for the Embedding Layer
-max_features = 83782
-max_seq_length = int(sum(numWords) / len(numWords)) + 5
-embedding_size = 300
+max_features = wordVectors.shape[0]
+max_seq_length = ids.shape[1]
+embedding_size = wordVectors.shape[1]
 
 # here we define the parameters for the convolutional Layer
 # kernel sizes contains the size of the two windows used for grouping words to compute a new feature
-
 filters_shapes = [2, 4]
 
 # the input shape of the input for the convolutional layer
@@ -69,7 +38,6 @@ batch_size = 100
 epochs = 5
 
 # creating the model structure
-
 model = Sequential()
 
 # First layer, embedding with the pre-trained word vectors, we train on these parameters
@@ -129,10 +97,3 @@ with open("basic_cnn_model.json", "w") as json_file:
 # serialize weights to HDF5
 model.save_weights("basic_cnn_weights.h5")
 print("Saved model to disk")
-
-
-
-
-
-
-

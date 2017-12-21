@@ -10,7 +10,7 @@ import numpy as np
 wordVectors = np.load('skipgrams/wordvecs_sg_6.npy')
 
 # here we loaded our ids matrix
-ids = np.load('skipgrams/ids_sg_7.npy')
+ids = np.load('skipgrams/ids_sg_6.npy')
 
 # here we split the ids matrix in train and test sets
 x_train, x_test, y_train, y_test = split_data(ids, 0.9)
