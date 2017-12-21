@@ -44,7 +44,8 @@ lstmCell = tf.nn.rnn_cell.BasicLSTMCell(lstm_units)
 lstmCell = tf.nn.rnn_cell.DropoutWrapper(cell=lstmCell, output_keep_prob=0.85)
 
 # Creates a recurrent neural network specified by RNNCell cell. data is the input
-# (outputs) value contains the output of the RNN cell at every time instant. - https://stackoverflow.com/questions/44162432/analysis-of-the-output-from-tf-nn-dynamic-rnn-tensorflow-function
+# (outputs) value contains the output of the RNN cell at every time instant.
+#  - https://stackoverflow.com/questions/44162432/analysis-of-the-output-from-tf-nn-dynamic-rnn-tensorflow-function
 # _ it's the final state
 value, _ = tf.nn.dynamic_rnn(lstmCell, data, dtype=tf.float64)
 
@@ -52,7 +53,9 @@ value, _ = tf.nn.dynamic_rnn(lstmCell, data, dtype=tf.float64)
 weight = tf.Variable(tf.truncated_normal([lstm_units, num_classes]))
 bias = tf.Variable(tf.constant(0.1, shape=[num_classes]))
 value = tf.transpose(value, [1, 0, 2])  # understand why the transpose and not value[:, -1, :] = last output of the cell
-last = tf.gather(value, int(value.get_shape()[0]) - 1)  # https://www.tensorflow.org/versions/master/api_docs/python/tf/gather
+
+# https://www.tensorflow.org/versions/master/api_docs/python/tf/gather
+last = tf.gather(value, int(value.get_shape()[0]) - 1)
 last = tf.cast(last, tf.float32)
 prediction = (tf.matmul(last, weight) + bias)  # matrix product
 
