@@ -43,49 +43,81 @@ batch_size = 100
 epochs = 5
 
 model = Sequential()
+
+# First layer, embedding using pretrained wordvectors
 model.add(Embedding(max_features, embedding_size, weights=[wordVectors], input_length=max_seq_length, trainable=False))
+
 # Prevent overfitting
 model.add(Dropout(drop_out))
-# First real layer, convolutional layer
+
+# convolutional layer
 model.add(Conv1D(filters,
                  kernel_size,
                  padding='valid',
                  activation='relu',
                  strides=1,
                  use_bias=False))
-# Ask Christian
+
+# adding the max_pooling layer to decrease the number
+# of features created after the convolutional layer
 model.add(MaxPooling1D(pool_size=pool_size))
+
 # Prevent overfitting
 model.add(Dropout(drop_out))
+
 # Adding LSTM layer
 model.add(LSTM(lstm_output_size))
-# Dense implements the operation: output = activation(dot(input, kernel) + bias) where activation is the element-wise
-# activation function passed as the activation argument, kernel is a weights matrix created by the layer, and bias is a
-# bias vector created by the layer (only applicable if use_bias is True).
+
+# adding the dense layer for reshaping and evaluate the y-value
 model.add(Dense(1))
 model.add(Activation('sigmoid'))
-'''
-metrics: List of metrics to be evaluated by the model during training and testing. Typically you will use 
-metrics=['accuracy']. To specify different metrics for different outputs of a multi-output model, you could also pass a 
-dictionary, such as metrics={'output_a': 'accuracy'}.
-'''
+
+# compiling our model structure
 model.compile(loss='binary_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
 
 print('Train...')
+
+# defining our callback to save metrics
+# in order to create the plots (loss, accuracy)
+history = History()
+
+# fitting the model with our data
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
           validation_data=(x_test, y_test))
+
+# evaluating our model on the test sets
 score, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
 print('Test score:', score)
 print('Test accuracy:', acc)
 
 # serialize model to JSON
 model_json = model.to_json()
-with open("crnn5_model.json", "w") as json_file:
+with open("one_kernel_CNN_LSTM_model.json", "w") as json_file:
     json_file.write(model_json)
+
 # serialize weights to HDF5
-model.save_weights("crnn5_weights.h5")
+model.save_weights("one_kernel_CNN_LSTM_weights.h5")
 print("Saved model to disk")
+
+# creating the prediction on test set csv file
+keras_prediction(model_path="one_kernel_CNN_LSTM_model.json",
+                 weights_path="one_kernel_CNN_LSTM_weights.h5",
+                 csv_file_name="one_kernel_cnn_lstm_prediction.csv")
+
+# From here, we save our metrics results for the comparison with plots
+val_acc_epochs = history.epocs_val_acc
+np.save("val_acc_one_kernel_CNN_LSTM.npy", val_acc_epochs)
+
+val_loss_epochs = history.epocs_val_loss
+np.save("val_loss_one_kernel_CNN_LSTM.npy", val_loss_epochs)
+
+smoothed_accuracy = smooth_graph(history.accuracy, 100)
+np.save("smoothed_acc_one_kernel_CNN_LSTM.npy", smoothed_accuracy)
+
+smoothed_losses = smooth_graph(history.losses, 100)
+np.save("smoothed_loss_one_kernel_CNN_LSTM.npy", smoothed_losses)
+

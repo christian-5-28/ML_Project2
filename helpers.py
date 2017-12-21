@@ -3,7 +3,7 @@ import datetime
 import numpy as np
 import re
 import keras
-from keras.models import Model, Input
+from keras.models import Model, Input, model_from_json
 from keras.layers import Conv1D, MaxPooling1D
 
 
@@ -176,6 +176,30 @@ def create_ids_matrix(positive_files, negative_files, max_seq_length, wordsList)
 
 
 # UTILITY FOR CREATING THE KAGGLE SUBMISSION
+
+def keras_prediction(model_path, weights_path, csv_file_name):
+    # load json and create model
+    json_file = open(model_path, 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    # load weights into new model
+    loaded_model.load_weights(weights_path)
+    print("Loaded model from disk")
+
+    loaded_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+    ids_test = np.load('data/our_trained_wordvectors/ids_test_sg_6.npy')
+
+    prediction = loaded_model.predict(ids_test, verbose=0)
+
+    prediction[prediction >= 0.5] = 1
+    prediction[prediction < 0.5] = -1
+    prediction = prediction.reshape(-1)
+    print(prediction)
+    make_submission(prediction, csv_file_name)
+
+
 def make_submission(pred, filename, from_tf=False):
 
     indices = np.arange(len(pred))

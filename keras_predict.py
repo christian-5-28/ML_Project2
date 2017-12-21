@@ -20,11 +20,7 @@ loaded_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['acc
 
 ids_test = np.load('data/our_trained_wordvectors/ids_test_sg_6.npy')
 
-fake_ids = []
-for i in range(len(ids_test)):
-    fake_ids.append(ids_test[i].tolist())
-
-prediction = loaded_model.predict(fake_ids, verbose=0)
+prediction = loaded_model.predict(ids_test, verbose=0)
 
 prediction[prediction >= 0.5] = 1
 prediction[prediction < 0.5] = -1
